@@ -9,7 +9,6 @@ import { ResourcesDashboard } from "./components/ResourcesDashboard";
 import { LiveCameraStudio } from "./components/LiveCameraStudio";
 import { MyReportsView } from "./components/MyReportsView";
 import { NotificationsView } from "./components/NotificationsView";
-import { Footer } from "./components/Footer";
 
 // Role-Specific Dashboards
 import { StudentDashboard } from "./components/RoleDashboards/StudentDashboard";
@@ -26,7 +25,7 @@ const MainContent = () => {
   // 1. Campus Map Tab
   if (activeTab === "MAP") {
     return (
-      <div className="max-w-6xl mx-auto py-6 px-4 space-y-4">
+      <div className="w-full max-w-[1700px] mx-auto py-6 px-3 sm:px-4 lg:px-6 space-y-4 box-border">
         <div className="flex items-center justify-between pb-2 border-b border-[#1E2C48]">
           <div>
             <h2 className="text-xl font-black text-white">Campus Digital Twin Graph Map</h2>
@@ -47,7 +46,7 @@ const MainContent = () => {
   // 3. Resources Tab (Admin)
   if (activeTab === "RESOURCES") {
     return (
-      <div className="max-w-6xl mx-auto py-6 px-4">
+      <div className="w-full max-w-[1700px] mx-auto py-6 px-3 sm:px-4 lg:px-6 box-border">
         <ResourcesDashboard />
       </div>
     );
@@ -113,20 +112,17 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080B13] text-slate-100 flex flex-col font-sans selection:bg-red-500/30">
+    <div className="min-h-screen w-full max-w-full bg-[#080B13] text-slate-100 flex flex-col font-sans selection:bg-red-500/30 overflow-x-hidden box-border">
       {/* 1. Clean Fixed Header Navigation */}
       <Navbar />
 
       {/* 2. Global Real-Time Campus Emergency Alert Banner (Shown during active emergencies) */}
       <EmergencyAlertBanner />
 
-      {/* 3. Main Dashboard Content Layer */}
-      <main className="flex-1 bg-gradient-to-b from-[#080B13] via-[#0A0E1A] to-[#080B13] pb-8">
+      {/* 3. Main Dashboard Content Layer - Ends cleanly after dashboard content */}
+      <main className="flex-1 w-full max-w-full bg-gradient-to-b from-[#080B13] via-[#0A0E1A] to-[#080B13] pb-10 box-border">
         <MainContent />
       </main>
-
-      {/* 4. Professional Academic Footer */}
-      <Footer />
     </div>
   );
 }
