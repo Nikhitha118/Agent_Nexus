@@ -1,15 +1,22 @@
 // Campus Sentinel AI - Frontend API Service
 const API_BASE = "http://localhost:5000/api";
 
-export async function fetchCampusData() {
+export async function fetchCampusData(userRole = "STUDENT") {
   try {
-    const [buildingsRes, camerasRes, apRes, graphRes, statsRes] = await Promise.all([
+    const roleUpper = (userRole || "").toUpperCase();
+    const canAccessCameras = roleUpper === "ADMIN" || roleUpper === "SECURITY";
+
+    const fetchPromises = [
       fetch(`${API_BASE}/campus/buildings`),
-      fetch(`${API_BASE}/campus/cameras`),
+      canAccessCameras
+        ? fetch(`${API_BASE}/campus/cameras`, { headers: { "x-user-role": roleUpper } })
+        : Promise.resolve({ json: async () => ({ cameras: [] }) }),
       fetch(`${API_BASE}/campus/assembly-points`),
       fetch(`${API_BASE}/campus/graph`),
       fetch(`${API_BASE}/campus/stats`)
-    ]);
+    ];
+
+    const [buildingsRes, camerasRes, apRes, graphRes, statsRes] = await Promise.all(fetchPromises);
 
     const buildings = (await buildingsRes.json()).buildings || [];
     const cameras = (await camerasRes.json()).cameras || [];

@@ -21,8 +21,37 @@ export const LiveCameraStudio = () => {
     selectedCameraId,
     setSelectedCameraId,
     triggerSimulation,
-    resetSystem
+    resetSystem,
+    currentRole,
+    setActiveTab
   } = useSentinel();
+
+  const isAuthorized = currentRole === "ADMIN" || currentRole === "SECURITY";
+
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-5 animate-fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-red-950/80 border-2 border-red-500/60 text-red-400 flex items-center justify-center mx-auto shadow-xl">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-wider uppercase">
+            CAMERA ACCESS RESTRICTED
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+            Live campus camera access is available only to authorized Admin and Security personnel.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab("HOME")}
+          className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95"
+        >
+          BACK TO DASHBOARD
+        </button>
+      </div>
+    );
+  }
 
   const videoRef = useRef(null);
   const [isWebcamActive, setIsWebcamActive] = useState(false);

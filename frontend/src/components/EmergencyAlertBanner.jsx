@@ -22,7 +22,8 @@ export const EmergencyAlertBanner = () => {
     activeEmergencyEvent,
     currentRole,
     setActiveTab,
-    resolveIncident
+    resolveIncident,
+    openResolveModal
   } = useSentinel();
 
   if (!activeIncident && !activeEmergencyEvent) {
@@ -145,6 +146,16 @@ export const EmergencyAlertBanner = () => {
             <Bot className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">EMERGENCY AI HUB</span>
           </button>
+
+          {(currentRole === "ADMIN" || currentRole === "SECURITY") && (
+            <button
+              onClick={() => openResolveModal(activeIncident)}
+              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 border border-emerald-400/40"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>RESOLVE</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

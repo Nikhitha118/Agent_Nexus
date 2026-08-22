@@ -284,10 +284,12 @@ export const SentinelProvider = ({ children }) => {
   const [activeEmergencyEvent, setActiveEmergencyEvent] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [isEmergencyAiModalOpen, setIsEmergencyAiModalOpen] = useState(false);
+  const [resolveModalIncident, setResolveModalIncident] = useState(null);
+  const [successToast, setSuccessToast] = useState(null);
 
   // Refresh all state from API
   const refreshAll = useCallback(async () => {
-    const campusRes = await fetchCampusData();
+    const campusRes = await fetchCampusData(currentRole);
     if (campusRes.success) {
       setBuildings(campusRes.buildings || []);
       setCameras(campusRes.cameras || []);
@@ -700,16 +702,62 @@ export const SentinelProvider = ({ children }) => {
     };
   };
 
-  // Resolve Active Incident
+  // Resolve Modal Helpers
+  const openResolveModal = (incident = null) => {
+    setResolveModalIncident(incident || activeIncident);
+  };
+  const closeResolveModal = () => {
+    setResolveModalIncident(null);
+  };
+
+  // Resolve Active Incident (Real State Transition & Toast Feedback)
   const resolveEmergencyIncident = async (incidentId = null, notes = "Incident resolved and campus secured.") => {
+    const targetId = incidentId || (activeIncident ? activeIncident.id : null);
     try {
-      await resolveActiveIncident(incidentId, notes);
+      if (targetId) {
+        await resolveActiveIncident(targetId, notes);
+      }
     } catch (e) {
-      console.warn("Backend resolve offline:", e);
+      console.warn("Backend resolve offline, updating local state:", e);
     }
+
+    if (activeIncident) {
+      const resolvedEntry = {
+        ...activeIncident,
+        status: "RESOLVED",
+        resolvedAt: new Date().toISOString(),
+        resolvedBy: currentUser ? `${currentUser.name} (${currentUser.role})` : "Officer",
+        resolutionNotes: notes
+      };
+      setIncidentsHistory(prev => [resolvedEntry, ...prev.filter(i => i.id !== resolvedEntry.id)]);
+    }
+
     setActiveIncident(null);
     setActiveEmergencyEvent(null);
+    setResolveModalIncident(null);
+
+    // Add Notification
+    const notif = {
+      id: `NOTIF-${Date.now()}`,
+      targetRole: "ALL",
+      type: "INCIDENT_RESOLVED",
+      title: "✅ EMERGENCY RESOLVED",
+      message: `Emergency incident at ${activeIncident ? activeIncident.location : "campus"} resolved and area confirmed safe.`,
+      severity: "LOW",
+      timestamp: new Date().toISOString(),
+      timeFormatted: new Date().toLocaleTimeString(),
+      status: "UNREAD"
+    };
+    setNotifications(prev => [notif, ...prev]);
+
+    // Show Green Success Toast
+    setSuccessToast("Emergency incident resolved successfully.");
+    setTimeout(() => {
+      setSuccessToast(null);
+    }, 4000);
   };
+
+  const resolveIncident = resolveEmergencyIncident;
 
   // Strict Credential Validation & Login Method
   const validateAndLogin = async ({ loginId, password, selectedRole }) => {
@@ -879,6 +927,7 @@ export const SentinelProvider = ({ children }) => {
         // Incidents & Notifications
         activeIncident,
         activeEmergencyEvent,
+        incidentsHistory,
         notifications,
         isEmergencyAiModalOpen,
         openEmergencyAiModal,
@@ -886,6 +935,12 @@ export const SentinelProvider = ({ children }) => {
         submitEmergencyQuickAlert,
         analyzeEmergencyQuickReport,
         resolveEmergencyIncident,
+        resolveIncident,
+        resolveModalIncident,
+        openResolveModal,
+        closeResolveModal,
+        successToast,
+        setSuccessToast,
 
         // Audio
         isAudioMuted,

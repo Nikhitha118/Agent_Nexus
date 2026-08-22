@@ -11,6 +11,8 @@ import { MyReportsView } from "./components/MyReportsView";
 import { NotificationsView } from "./components/NotificationsView";
 import { EmergencyAiQuickButton } from "./components/EmergencyAiQuickButton";
 import { EmergencyAiQuickModal } from "./components/EmergencyAiQuickModal";
+import { ResolveIncidentModal } from "./components/ResolveIncidentModal";
+import { CheckCircle2 } from "lucide-react";
 
 // Role-Specific Dashboards
 import { StudentDashboard } from "./components/RoleDashboards/StudentDashboard";
@@ -40,7 +42,7 @@ const MainContent = () => {
     );
   }
 
-  // 2. Live Cameras Tab
+  // 2. Live Cameras Tab (Strict Role Guard in Component)
   if (activeTab === "LIVE_CAMERAS") {
     return <LiveCameraStudio />;
   }
@@ -106,7 +108,13 @@ const MainContent = () => {
 };
 
 function AppContent() {
-  const { isAuthenticated, currentUser } = useSentinel();
+  const {
+    isAuthenticated,
+    currentUser,
+    resolveModalIncident,
+    closeResolveModal,
+    successToast
+  } = useSentinel();
 
   // If unauthenticated, render dedicated Login / Role Selection portal with Emergency AI floating button & modal
   if (!isAuthenticated || !currentUser) {
@@ -127,14 +135,31 @@ function AppContent() {
       {/* 2. Global Real-Time Campus Emergency Alert Banner (Shown during active emergencies) */}
       <EmergencyAlertBanner />
 
-      {/* 3. Main Dashboard Content Layer - Ends cleanly after dashboard content */}
+      {/* 3. Global Green Success Toast Notification */}
+      {successToast && (
+        <div className="fixed top-20 right-4 sm:right-6 z-50 p-4 rounded-2xl bg-[#0F1626] border-2 border-emerald-500 text-white text-xs font-bold shadow-2xl flex items-center space-x-3 animate-slide-in">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 animate-bounce" />
+          <span>{successToast}</span>
+        </div>
+      )}
+
+      {/* 4. Main Dashboard Content Layer - Ends cleanly after dashboard content */}
       <main className="flex-1 w-full max-w-full bg-gradient-to-b from-[#080B13] via-[#0A0E1A] to-[#080B13] pb-10 box-border">
         <MainContent />
       </main>
 
-      {/* 4. Global Emergency AI Quick Action Button & Full-Screen Reporting Modal */}
+      {/* 5. Global Emergency AI Quick Action Button & Full-Screen Reporting Modal */}
       <EmergencyAiQuickButton />
       <EmergencyAiQuickModal />
+
+      {/* 6. Global Resolve Incident Confirmation Modal */}
+      {resolveModalIncident && (
+        <ResolveIncidentModal
+          isOpen={!!resolveModalIncident}
+          onClose={closeResolveModal}
+          incident={resolveModalIncident}
+        />
+      )}
     </div>
   );
 }

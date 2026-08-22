@@ -65,11 +65,13 @@ export const CampusMap = ({ height = "h-[550px]", selectedBuildingId = null, int
     graphNodes,
     graphEdges,
     blockedEdgeIds,
-    activeIncident
+    activeIncident,
+    currentRole
   } = useSentinel();
 
+  const isAuthorizedForCameras = currentRole === "ADMIN" || currentRole === "SECURITY";
   const [mapCenter, setMapCenter] = useState([37.7765, -122.4175]);
-  const [showCameras, setShowCameras] = useState(true);
+  const [showCameras, setShowCameras] = useState(isAuthorizedForCameras);
   const [showBuildings, setShowBuildings] = useState(true);
   const [showSafeRoute, setShowSafeRoute] = useState(true);
   const [showResponders, setShowResponders] = useState(true);
@@ -200,8 +202,8 @@ export const CampusMap = ({ height = "h-[550px]", selectedBuildingId = null, int
           );
         })}
 
-        {/* 2. CCTV CAMERA MARKERS */}
-        {showCameras && cameras.map((cam) => (
+        {/* 2. CCTV CAMERA MARKERS (ADMIN & SECURITY ONLY) */}
+        {showCameras && isAuthorizedForCameras && cameras.map((cam) => (
           <Marker
             key={cam.id}
             position={[cam.lat, cam.lng]}
@@ -428,15 +430,17 @@ export const CampusMap = ({ height = "h-[550px]", selectedBuildingId = null, int
           <span>Buildings & Footprints</span>
         </label>
 
-        <label className="flex items-center space-x-2 text-slate-300 cursor-pointer text-[11px]">
-          <input
-            type="checkbox"
-            checked={showCameras}
-            onChange={(e) => setShowCameras(e.target.checked)}
-            className="rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0"
-          />
-          <span>CCTV Cameras (8)</span>
-        </label>
+        {isAuthorizedForCameras && (
+          <label className="flex items-center space-x-2 text-slate-300 cursor-pointer text-[11px]">
+            <input
+              type="checkbox"
+              checked={showCameras}
+              onChange={(e) => setShowCameras(e.target.checked)}
+              className="rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0"
+            />
+            <span>CCTV Cameras (8)</span>
+          </label>
+        )}
 
         <label className="flex items-center space-x-2 text-slate-300 cursor-pointer text-[11px]">
           <input

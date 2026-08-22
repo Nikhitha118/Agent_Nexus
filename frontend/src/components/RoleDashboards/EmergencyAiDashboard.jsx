@@ -23,6 +23,8 @@ import {
   FileText
 } from "lucide-react";
 
+import { ResolveIncidentModal } from "../ResolveIncidentModal";
+
 export const EmergencyAiDashboard = () => {
   const {
     activeIncident,
@@ -30,6 +32,9 @@ export const EmergencyAiDashboard = () => {
     emergencyEvents,
     activateEmergencyAI,
     resolveIncident,
+    resolveModalIncident,
+    openResolveModal,
+    closeResolveModal,
     isSimulating,
     currentRole,
     currentUser,
@@ -180,10 +185,12 @@ export const EmergencyAiDashboard = () => {
               </h2>
             </div>
             <button
-              onClick={() => resolveIncident("Incident controlled and confirmed safe by Emergency AI Commander.")}
-              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition-all"
+              type="button"
+              onClick={() => openResolveModal(activeIncident)}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg transition-all active:scale-95 border border-emerald-400/40 flex items-center space-x-1.5"
             >
-              RESOLVE INCIDENT
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>RESOLVE INCIDENT</span>
             </button>
           </div>
 
@@ -370,6 +377,15 @@ export const EmergencyAiDashboard = () => {
           <p className="text-xs text-slate-500 font-mono italic">No previous emergency incidents recorded in this session.</p>
         )}
       </div>
+
+      {/* Resolve Incident Confirmation Modal */}
+      {resolveModalIncident && (
+        <ResolveIncidentModal
+          isOpen={!!resolveModalIncident}
+          onClose={closeResolveModal}
+          incident={resolveModalIncident}
+        />
+      )}
     </div>
   );
 };
