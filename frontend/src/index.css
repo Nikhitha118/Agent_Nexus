@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #080B13;
+  color: #F1F5F9;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+code, kbd, samp, pre {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B101D;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Leaflet Map Custom Styling */
+.leaflet-container {
+  background: #080B13 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: #141D32 !important;
+  color: #94A3B8 !important;
+  border-color: #1E2C48 !important;
+}
+.leaflet-control-zoom a:hover {
+  background-color: #1E2C48 !important;
+  color: #FFFFFF !important;
+}
+.leaflet-control-attribution {
+  background: rgba(11, 16, 29, 0.8) !important;
+  color: #64748B !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a {
+  color: #38BDF8 !important;
+}
+
+/* Scanner Grid Background */
+.bg-grid-pattern {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(30, 44, 72, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(30, 44, 72, 0.3) 1px, transparent 1px);
+}
+
+/* Glassmorphism panel */
+.glass-panel {
+  background: rgba(15, 22, 38, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 44, 72, 0.7);
+}
+
+/* Pulse animation for hazard circle */
+@keyframes hazardPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+.hazard-pulse-circle {
+  animation: hazardPulse 2s ease-in-out infinite;
+}
+
+/* Marching ants route animation */
+@keyframes dashRoute {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.animated-safe-route {
+  stroke-dasharray: 8, 8;
+  animation: dashRoute 1s linear infinite;
+}
+
+/* Subtle Cinematic Movement for Background Video */
+@keyframes subtleZoom {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-subtle-zoom {
+  animation: subtleZoom 28s ease-in-out infinite alternate;
+}
