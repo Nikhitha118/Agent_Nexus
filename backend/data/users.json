@@ -82,5 +82,17 @@
     "badge": "STUDENT Registered Member",
     "avatar": "🎓",
     "createdAt": "2026-08-22T06:48:44.784Z"
+  },
+  {
+    "id": "U-STUDENT-MT40SQMU",
+    "email": "honey@vignan.edu",
+    "username": "honey",
+    "password": "cse123",
+    "role": "STUDENT",
+    "name": "nikhitha",
+    "title": "cse",
+    "badge": "STUDENT Registered Member",
+    "avatar": "🎓",
+    "createdAt": "2026-08-22T06:51:43.446Z"
   }
 ]
