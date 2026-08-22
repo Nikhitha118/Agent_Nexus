@@ -9,6 +9,8 @@ import { ResourcesDashboard } from "./components/ResourcesDashboard";
 import { LiveCameraStudio } from "./components/LiveCameraStudio";
 import { MyReportsView } from "./components/MyReportsView";
 import { NotificationsView } from "./components/NotificationsView";
+import { EmergencyAiQuickButton } from "./components/EmergencyAiQuickButton";
+import { EmergencyAiQuickModal } from "./components/EmergencyAiQuickModal";
 
 // Role-Specific Dashboards
 import { StudentDashboard } from "./components/RoleDashboards/StudentDashboard";
@@ -106,13 +108,19 @@ const MainContent = () => {
 function AppContent() {
   const { isAuthenticated, currentUser } = useSentinel();
 
-  // If unauthenticated, render dedicated Login / Role Selection portal
+  // If unauthenticated, render dedicated Login / Role Selection portal with Emergency AI floating button & modal
   if (!isAuthenticated || !currentUser) {
-    return <LoginPage />;
+    return (
+      <div className="relative min-h-screen w-full">
+        <LoginPage />
+        <EmergencyAiQuickButton />
+        <EmergencyAiQuickModal />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full bg-[#080B13] text-slate-100 flex flex-col font-sans selection:bg-red-500/30 overflow-x-hidden box-border">
+    <div className="min-h-screen w-full max-w-full bg-[#080B13] text-slate-100 flex flex-col font-sans selection:bg-red-500/30 overflow-x-hidden box-border relative">
       {/* 1. Clean Fixed Header Navigation */}
       <Navbar />
 
@@ -123,6 +131,10 @@ function AppContent() {
       <main className="flex-1 w-full max-w-full bg-gradient-to-b from-[#080B13] via-[#0A0E1A] to-[#080B13] pb-10 box-border">
         <MainContent />
       </main>
+
+      {/* 4. Global Emergency AI Quick Action Button & Full-Screen Reporting Modal */}
+      <EmergencyAiQuickButton />
+      <EmergencyAiQuickModal />
     </div>
   );
 }

@@ -1,9 +1,19 @@
-// Campus Sentinel AI - AI Router (NLP & Vision)
+// Campus Sentinel - AI Router (NLP, Vision & Quick Emergency Analysis)
 import express from "express";
 import { aiService } from "../services/AIService.js";
 import { agentOrchestrator } from "../agents/AgentOrchestrator.js";
 
 const router = express.Router();
+
+// POST multi-modal Quick Emergency AI Analysis
+router.post("/analyze-emergency", async (req, res) => {
+  try {
+    const analysis = await aiService.analyzeEmergencyQuickReport(req.body);
+    res.json(analysis);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // POST parse natural language emergency text
 router.post("/report-nlp", async (req, res) => {

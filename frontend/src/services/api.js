@@ -300,3 +300,30 @@ export async function updateReportStatusApi(reportId, status, updatedBy = "Offic
   }
 }
 
+export async function analyzeEmergencyQuickReportApi(payload) {
+  try {
+    const res = await fetch(`${API_BASE}/ai/analyze-emergency`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function submitQuickEmergencyAlertApi(payload) {
+  try {
+    const res = await fetch(`${API_BASE}/incidents/quick-alert`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+
