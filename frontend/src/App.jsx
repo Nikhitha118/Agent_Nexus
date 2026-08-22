@@ -32,12 +32,12 @@ const MainContent = () => {
       <div className="w-full max-w-[1700px] mx-auto py-6 px-3 sm:px-4 lg:px-6 space-y-4 box-border">
         <div className="flex items-center justify-between pb-2 border-b border-[#1E2C48]">
           <div>
-            <h2 className="text-xl font-black text-white">Campus Digital Twin Graph Map</h2>
-            <p className="text-xs text-slate-400">Interactive campus navigation mesh & sensor topography</p>
+            <h2 className="text-xl font-black text-white">Vignan University • 3D Campus Digital Twin</h2>
+            <p className="text-xs text-slate-400">Interactive 3D Vector Map, real-time emergency routing & safe assembly topography</p>
           </div>
-          <span className="text-xs font-mono text-cyan-400">39 Nodes • 46 Edge Routes</span>
+          <span className="text-xs font-mono text-cyan-400">12 Buildings • 5 Safe Zones • 8 CCTV Nodes</span>
         </div>
-        <CampusMap height="h-[620px]" interactive={true} />
+        <CampusMap height="h-[640px]" interactive={true} />
       </div>
     );
   }
