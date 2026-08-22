@@ -94,5 +94,17 @@
     "badge": "STUDENT Registered Member",
     "avatar": "🎓",
     "createdAt": "2026-08-22T06:51:43.446Z"
+  },
+  {
+    "id": "U-ADMIN-MT47IOOO",
+    "email": "hod@vignan.edu",
+    "username": "hod",
+    "password": "admin1234",
+    "role": "ADMIN",
+    "name": "dean",
+    "title": "cse",
+    "badge": "ADMIN Registered Member",
+    "avatar": "👨‍💼",
+    "createdAt": "2026-08-22T09:59:51.672Z"
   }
 ]
