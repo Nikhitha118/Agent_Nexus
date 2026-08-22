@@ -77,7 +77,7 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-6 px-4 space-y-6 animate-fade-in">
+    <div className="w-full max-w-[1700px] mx-auto py-6 px-3 sm:px-4 lg:px-6 space-y-6 box-border">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E2C48]">
         <div className="space-y-1">
@@ -104,44 +104,44 @@ export const AdminDashboard = () => {
         )}
       </div>
 
-      {/* 5 Key Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="p-4 rounded-2xl bg-[#0F1626] border border-[#1E2C48] shadow-lg space-y-1">
-          <span className="text-[10px] font-mono text-slate-400 uppercase">TOTAL REPORTS</span>
+      {/* 5 Key Metric Cards (Responsive Grid, min-w-0 for flex shrinking) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
+        <div className="min-w-0 p-4 rounded-2xl bg-[#0F1626] border border-[#1E2C48] shadow-lg space-y-1">
+          <span className="text-[10px] font-mono text-slate-400 uppercase truncate block">TOTAL REPORTS</span>
           <p className="text-2xl font-black text-white">{totalReports}</p>
-          <span className="text-[10px] text-cyan-400 font-mono">Admin Managed</span>
+          <span className="text-[10px] text-cyan-400 font-mono block truncate">Admin Managed</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F1626] border border-blue-600/40 shadow-lg space-y-1">
-          <span className="text-[10px] font-mono text-blue-400 uppercase">NEW REPORTS</span>
+        <div className="min-w-0 p-4 rounded-2xl bg-[#0F1626] border border-blue-600/40 shadow-lg space-y-1">
+          <span className="text-[10px] font-mono text-blue-400 uppercase truncate block">NEW REPORTS</span>
           <p className="text-2xl font-black text-blue-300">{newReports}</p>
-          <span className="text-[10px] text-blue-400 font-mono">Pending Review</span>
+          <span className="text-[10px] text-blue-400 font-mono block truncate">Pending Review</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F1626] border border-amber-600/40 shadow-lg space-y-1">
-          <span className="text-[10px] font-mono text-amber-400 uppercase">IN PROGRESS</span>
+        <div className="min-w-0 p-4 rounded-2xl bg-[#0F1626] border border-amber-600/40 shadow-lg space-y-1">
+          <span className="text-[10px] font-mono text-amber-400 uppercase truncate block">IN PROGRESS</span>
           <p className="text-2xl font-black text-amber-300">{inProgressReports}</p>
-          <span className="text-[10px] text-amber-400 font-mono">Dispatched</span>
+          <span className="text-[10px] text-amber-400 font-mono block truncate">Dispatched</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F1626] border border-emerald-600/40 shadow-lg space-y-1">
-          <span className="text-[10px] font-mono text-emerald-400 uppercase">RESOLVED</span>
+        <div className="min-w-0 p-4 rounded-2xl bg-[#0F1626] border border-emerald-600/40 shadow-lg space-y-1">
+          <span className="text-[10px] font-mono text-emerald-400 uppercase truncate block">RESOLVED</span>
           <p className="text-2xl font-black text-emerald-300">{resolvedReports}</p>
-          <span className="text-[10px] text-emerald-400 font-mono">Completed</span>
+          <span className="text-[10px] text-emerald-400 font-mono block truncate">Completed</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F1626] border border-red-600/40 shadow-lg space-y-1 col-span-2 sm:col-span-1">
-          <span className="text-[10px] font-mono text-red-400 uppercase">CRITICAL ISSUES</span>
+        <div className="min-w-0 p-4 rounded-2xl bg-[#0F1626] border border-red-600/40 shadow-lg space-y-1 col-span-2 sm:col-span-1">
+          <span className="text-[10px] font-mono text-red-400 uppercase truncate block">CRITICAL ISSUES</span>
           <p className="text-2xl font-black text-red-300">{criticalReports}</p>
-          <span className="text-[10px] text-red-400 font-mono">High Priority</span>
+          <span className="text-[10px] text-red-400 font-mono block truncate">High Priority</span>
         </div>
       </div>
 
       {/* Filter Tabs & Search Bar */}
-      <div className="p-4 rounded-3xl bg-[#0F1626] border border-[#1E2C48] shadow-xl space-y-4">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+      <div className="w-full p-4 rounded-3xl bg-[#0F1626] border border-[#1E2C48] shadow-xl space-y-4 box-border">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 w-full">
           {/* Category Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 w-full lg:w-auto">
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
             {[
               { id: "ALL", label: "All Admin Queue" },
               { id: "CLASSROOM", label: "Classroom Issues" },
@@ -152,7 +152,7 @@ export const AdminDashboard = () => {
               <button
                 key={cat.id}
                 onClick={() => setCategoryFilter(cat.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   categoryFilter === cat.id
                     ? "bg-blue-600 text-white shadow"
                     : "bg-[#141D32] text-slate-400 hover:text-white border border-[#1E2C48]"
@@ -164,7 +164,7 @@ export const AdminDashboard = () => {
           </div>
 
           {/* Search Input */}
-          <div className="relative w-full lg:w-72">
+          <div className="relative w-full lg:w-72 shrink-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -176,9 +176,9 @@ export const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Operational Reports Table */}
-        <div className="overflow-x-auto rounded-2xl border border-[#1E2C48]">
-          <table className="w-full text-left text-xs text-slate-300">
+        {/* Operational Reports Table in responsive container */}
+        <div className="w-full max-w-full overflow-x-auto rounded-2xl border border-[#1E2C48]">
+          <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
             <thead className="bg-[#141D32] text-slate-400 font-mono text-[10px] uppercase border-b border-[#1E2C48]">
               <tr>
                 <th className="py-3 px-4">REPORT ID</th>
@@ -205,21 +205,21 @@ export const AdminDashboard = () => {
                     className="hover:bg-[#141D32]/50 transition-colors cursor-pointer"
                     onClick={() => setSelectedReportForDetails(report)}
                   >
-                    <td className="py-3.5 px-4 font-mono font-bold text-cyan-400">
+                    <td className="py-3.5 px-4 font-mono font-bold text-cyan-400 whitespace-nowrap">
                       {report.id}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-white max-w-xs truncate">
                       {report.title}
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-[10px]">
+                    <td className="py-3.5 px-4 font-mono text-[10px] whitespace-nowrap">
                       <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
                         {report.category}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-300">
+                    <td className="py-3.5 px-4 font-mono text-slate-300 whitespace-nowrap">
                       {report.location}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <span className="font-semibold text-slate-200 block">
                         {report.submittedBy?.name || "Campus Member"}
                       </span>
@@ -227,17 +227,17 @@ export const AdminDashboard = () => {
                         {report.submittedBy?.role || "User"}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono">
+                    <td className="py-3.5 px-4 font-mono whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded text-[10px] border ${getPriorityBadge(report.priority)}`}>
                         {report.priority}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono">
+                    <td className="py-3.5 px-4 font-mono whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] border ${getStatusBadge(report.status)}`}>
                         {report.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end space-x-1.5">
                         {report.status === "NEW" && (
                           <button

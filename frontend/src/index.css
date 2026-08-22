@@ -2,14 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color-scheme: dark;
 }
 
 body {
-  margin: 0;
-  padding: 0;
   background-color: #080B13;
   color: #F1F5F9;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
