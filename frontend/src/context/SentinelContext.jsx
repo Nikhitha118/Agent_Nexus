@@ -217,33 +217,24 @@ const DEFAULT_INITIAL_REPORTS = [
   }
 ];
 
+const getStoredSession = () => {
+  try {
+    const raw = localStorage.getItem("sentinel_session") || sessionStorage.getItem("sentinel_session");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && parsed.role ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
 export const SentinelProvider = ({ children }) => {
-  // Authentication & Role State
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem("sentinel_session");
-      return !!saved;
-    } catch {
-      return false;
-    }
-  });
-
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem("sentinel_session");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
+  // Authentication & Role State (Durable session persistence across page reload / restart)
+  const [currentUser, setCurrentUser] = useState(() => getStoredSession());
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!getStoredSession());
   const [currentRole, setCurrentRole] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem("sentinel_session");
-      return saved ? JSON.parse(saved).role : "ADMIN";
-    } catch {
-      return "ADMIN";
-    }
+    const s = getStoredSession();
+    return s && s.role ? s.role : "ADMIN";
   });
 
   const [activeTab, setActiveTab] = useState("HOME");
@@ -761,7 +752,11 @@ export const SentinelProvider = ({ children }) => {
 
   // Strict Credential Validation & Login Method
   const validateAndLogin = async ({ loginId, password, selectedRole }) => {
-    // 1. Try Backend Verification
+    if (!loginId || !password) {
+      return { success: false, error: "Please enter your University ID / Username and Password." };
+    }
+
+    // 1. Try Backend Verification (Durable Database)
     try {
       const apiRes = await loginUser(loginId, password, selectedRole);
       if (apiRes && apiRes.success && apiRes.user) {
@@ -769,6 +764,7 @@ export const SentinelProvider = ({ children }) => {
         setCurrentRole(apiRes.user.role);
         setIsAuthenticated(true);
         setActiveTab("HOME");
+        localStorage.setItem("sentinel_session", JSON.stringify(apiRes.user));
         sessionStorage.setItem("sentinel_session", JSON.stringify(apiRes.user));
         return { success: true, user: apiRes.user };
       }
@@ -779,7 +775,7 @@ export const SentinelProvider = ({ children }) => {
       console.warn("Backend auth offline, using local verification:", err);
     }
 
-    // 2. Strict Local Verification Fallback
+    // 2. Strict Local Verification Fallback (Only if backend completely unreachable)
     const accounts = getStoredAccounts();
     const cleanId = (loginId || "").trim().toLowerCase();
 
@@ -798,7 +794,7 @@ export const SentinelProvider = ({ children }) => {
     if (selectedRole && account.role.toUpperCase() !== selectedRole.toUpperCase()) {
       return {
         success: false,
-        error: `This account is not authorized for the selected role (${selectedRole.toUpperCase()}).`
+        error: `This account is not authorized for the selected role (${selectedRole.toUpperCase()}). Registered role: ${account.role.toUpperCase()}.`
       };
     }
 
@@ -817,6 +813,7 @@ export const SentinelProvider = ({ children }) => {
     setCurrentRole(userSafe.role);
     setIsAuthenticated(true);
     setActiveTab("HOME");
+    localStorage.setItem("sentinel_session", JSON.stringify(userSafe));
     sessionStorage.setItem("sentinel_session", JSON.stringify(userSafe));
     return { success: true, user: userSafe };
   };
@@ -826,18 +823,24 @@ export const SentinelProvider = ({ children }) => {
     const cleanUsername = (username || "").trim().toLowerCase();
     const targetRole = (role || "STUDENT").toUpperCase();
 
-    const accounts = getStoredAccounts();
-    if (accounts.some(a => a.username.toLowerCase() === cleanUsername)) {
+    if (!cleanUsername || !password) {
       return {
         success: false,
-        error: "An account with this username already exists. Please choose a different username."
+        error: "Username and Password are required."
       };
     }
 
+    // Call backend persistent registration
     try {
-      await registerUser(name, cleanUsername, password, targetRole, department);
+      const apiRes = await registerUser(name, cleanUsername, password, targetRole, department);
+      if (apiRes && !apiRes.success && !apiRes.networkError) {
+        return {
+          success: false,
+          error: apiRes.error || "Registration failed. Please try again."
+        };
+      }
     } catch (e) {
-      console.warn("Backend registration offline, saved locally.");
+      console.warn("Backend registration offline, caching locally:", e);
     }
 
     const avatarMap = {
@@ -855,8 +858,8 @@ export const SentinelProvider = ({ children }) => {
       username: cleanUsername,
       password: password,
       role: targetRole,
-      name: name ? name.trim() : `${targetRole} Officer`,
-      title: department ? department.trim() : `${targetRole} Department`,
+      name: name && name.trim() ? name.trim() : `${targetRole} Officer`,
+      title: department && department.trim() ? department.trim() : `${targetRole} Department`,
       badge: `${targetRole} Registered Member`,
       avatar: avatarMap[targetRole] || "👤",
       createdAt: new Date().toISOString()
@@ -881,6 +884,7 @@ export const SentinelProvider = ({ children }) => {
     setActiveReportingCategory(null);
     setSelectedReportForDetails(null);
     sessionStorage.removeItem("sentinel_session");
+    localStorage.removeItem("sentinel_session");
   };
 
   // Audio Toggle

@@ -1,0 +1,86 @@
+[
+  {
+    "id": "U-ADMIN-01",
+    "email": "admin@vignan.edu",
+    "username": "admin",
+    "password": "admin123",
+    "role": "ADMIN",
+    "name": "Dr. K. Ramamurthy",
+    "title": "Dean of Campus Operations",
+    "badge": "Admin Authority",
+    "avatar": "👨‍💼",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "U-FAC-04",
+    "email": "faculty@vignan.edu",
+    "username": "faculty",
+    "password": "faculty123",
+    "role": "FACULTY",
+    "name": "Prof. Ananya Sharma",
+    "title": "Senior Faculty & Floor Warden",
+    "badge": "Faculty / Warden",
+    "avatar": "👩‍🏫",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "U-STU-2026",
+    "email": "student@vignan.edu",
+    "username": "student",
+    "password": "student123",
+    "role": "STUDENT",
+    "name": "Rahul Verma",
+    "title": "B.Tech Computer Science (3rd Year)",
+    "badge": "Student Civilian",
+    "avatar": "🎓",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "U-SEC-09",
+    "email": "security@vignan.edu",
+    "username": "security",
+    "password": "security123",
+    "role": "SECURITY",
+    "name": "Sgt. Sarah Chen",
+    "title": "Lead Delta Rapid Tactical Guard",
+    "badge": "Security Officer",
+    "avatar": "🛡️",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "U-MED-03",
+    "email": "medical@vignan.edu",
+    "username": "medical",
+    "password": "medical123",
+    "role": "MEDICAL",
+    "name": "Dr. Karen Thorne",
+    "title": "Chief Trauma Physician / Paramedic",
+    "badge": "Medical Team Lead",
+    "avatar": "🏥",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "U-TRANS-05",
+    "email": "transport@vignan.edu",
+    "username": "transport",
+    "password": "transport123",
+    "role": "TRANSPORT",
+    "name": "Campus Transit Fleet Dispatch",
+    "title": "Chief Transportation & Mobility Officer",
+    "badge": "Transport Fleet Coordinator",
+    "avatar": "🚌",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "U-STUDENT-MT40OWS0",
+    "email": "priya_sharma@vignan.edu",
+    "username": "priya_sharma",
+    "password": "PriyaPass@123",
+    "role": "STUDENT",
+    "name": "Priya Sharma",
+    "title": "Computer Science & Engineering",
+    "badge": "STUDENT Registered Member",
+    "avatar": "🎓",
+    "createdAt": "2026-08-22T06:48:44.784Z"
+  }
+]
