@@ -1,13 +1,15 @@
-// Campus Sentinel - 3D Google Maps Digital Twin & Live Emergency Operations Center
+// Campus Sentinel - Vignan University 3D Digital Twin & Dynamic Campus Evacuation Network
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSentinel } from "../context/SentinelContext";
 import { useGoogleMaps } from "../utils/googleMapsLoader";
 import {
   CAMPUS_CENTER,
   CAMPUS_LOCATIONS,
-  SAFE_ZONES,
-  CAMPUS_CAMERAS
-} from "../data/campusLocations";
+  CAMPUS_ROAD_EDGES,
+  ALL_NETWORK_NODES,
+  calculateCustomCampusRoute
+} from "../data/vignanCampusNetwork";
+import { CAMPUS_CAMERAS } from "../data/campusLocations";
 import {
   Flame,
   Shield,
@@ -28,7 +30,13 @@ import {
   RotateCw,
   Plus,
   Minus,
-  Maximize2
+  Maximize2,
+  Ban,
+  Settings2,
+  HelpCircle,
+  Footprints,
+  ShieldAlert,
+  Building
 } from "lucide-react";
 
 export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
@@ -39,36 +47,48 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
     openResolveModal
   } = useSentinel();
 
-  const isAuthorizedForCameras = currentRole === "ADMIN" || currentRole === "SECURITY";
-  const { mapsLoaded, loadError, googleMaps, mapId } = useGoogleMaps();
+  const isAuthorizedForAdmin = currentRole === "ADMIN";
+  const isAuthorizedForSecurity = currentRole === "ADMIN" || currentRole === "SECURITY";
+  const isAuthorizedForCameras = isAuthorizedForSecurity;
+
+  const { mapsLoaded, loadError, mapId } = useGoogleMaps();
 
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const circlesRef = useRef([]);
   const routePolylineRef = useRef(null);
-  const directionsRendererRef = useRef(null);
+  const arrowPolylineRef = useRef(null);
+  const blockedPolylinesRef = useRef([]);
 
   // Map Controls State
   const [is3DMode, setIs3DMode] = useState(true);
-  const [showBuildings, setShowBuildings] = useState(true);
+  const [showLocations, setShowLocations] = useState(true);
   const [showSafeZones, setShowSafeZones] = useState(true);
   const [showCameras, setShowCameras] = useState(isAuthorizedForCameras);
-  const [showEvacuationRoute, setShowEvacuationRoute] = useState(true);
+  const [showCampusNetwork, setShowCampusNetwork] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState(null);
 
-  // Evacuation Routing Calculation State
-  const [routeInfo, setRouteInfo] = useState({
-    distanceText: "420 m",
-    durationText: "5 min",
-    destinationName: "Safe Zone Alpha — Central Quadrangle Lawn",
-    destinationCoords: SAFE_ZONES[0],
-    isCalculated: false
-  });
+  // Selected Start Location (Defaults to incident location or A-Block)
+  const [selectedStartLocationId, setSelectedStartLocationId] = useState("a-block");
 
-  // Selected Item for Detail Popover
+  // Admin Route Blockage & Network Editor State
+  const [showRouteEditor, setShowRouteEditor] = useState(false);
+  const [blockedEdgeIds, setBlockedEdgeIds] = useState([]);
+
+  // Calculated Dynamic Evacuation Route
+  const [routeResult, setRouteResult] = useState(() =>
+    calculateCustomCampusRoute({
+      originLocationId: "a-block",
+      incidentLocationId: activeIncident?.locationId || "a-block",
+      hazardRadius: activeIncident?.hazardRadius || 85,
+      blockedEdgeIds: []
+    })
+  );
+
+  // Selected item popover
   const [selectedItem, setSelectedItem] = useState(null);
 
   // 1. Initialize Google 3D Vector Map
@@ -93,146 +113,150 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
     }
   }, [mapsLoaded, mapId, interactive]);
 
-  // Helper: Clear active markers & circles
+  // 2. Clear Overlays Helper
   const clearMapOverlays = useCallback(() => {
-    markersRef.current.forEach((m) => {
-      if (m.setMap) m.setMap(null);
-    });
+    markersRef.current.forEach(m => { if (m.setMap) m.setMap(null); });
     markersRef.current = [];
 
-    circlesRef.current.forEach((c) => {
-      if (c.setMap) c.setMap(null);
-    });
+    circlesRef.current.forEach(c => { if (c.setMap) c.setMap(null); });
     circlesRef.current = [];
 
     if (routePolylineRef.current) {
       routePolylineRef.current.setMap(null);
       routePolylineRef.current = null;
     }
+
+    if (arrowPolylineRef.current) {
+      arrowPolylineRef.current.setMap(null);
+      arrowPolylineRef.current = null;
+    }
+
+    blockedPolylinesRef.current.forEach(p => { if (p.setMap) p.setMap(null); });
+    blockedPolylinesRef.current = [];
   }, []);
 
-  // 2. Render Markers & Overlays whenever State or Layer Toggles change
+  // 3. Compute Dynamic Route whenever Incident, Blocked Roads, or Origin changes
+  useEffect(() => {
+    const originId = userLocation ? null : (selectedStartLocationId || "a-block");
+
+    const result = calculateCustomCampusRoute({
+      originLocationId: originId,
+      userGpsCoords: userLocation,
+      incidentLocationId: activeIncident?.locationId || (activeIncident ? "a-block" : null),
+      incidentCoords: activeIncident?.locationCoords || null,
+      hazardRadius: activeIncident?.hazardRadius || 85,
+      blockedEdgeIds: blockedEdgeIds,
+      preferredSafeZoneId: "playground"
+    });
+
+    setRouteResult(result);
+  }, [activeIncident, blockedEdgeIds, selectedStartLocationId, userLocation]);
+
+  // 4. Render All Custom Markers, Danger Zones, Blocked Paths & Animated Safe Route
   const renderMapLayers = useCallback(() => {
     const map = mapInstanceRef.current;
     if (!map || !window.google || !window.google.maps) return;
 
     clearMapOverlays();
 
-    // A. SAFE ZONES (Green Markers)
-    if (showSafeZones) {
-      SAFE_ZONES.forEach((sz) => {
-        const isRecommended =
-          activeIncident?.recommendedAssemblyPoint?.id === sz.id ||
-          sz.id === "AP-01";
+    // A. 15 OFFICIAL VIGNAN UNIVERSITY LOCATIONS
+    if (showLocations) {
+      CAMPUS_LOCATIONS.forEach((loc) => {
+        const isSafeZone = loc.isSafeZone;
+        const isPrimarySafeZone = loc.id === "playground";
+
+        // SVG Pin Color & Glyph based on location type
+        let pinColor = "#0284C7"; // Default building (Cyan/Blue)
+        let pinBorder = "#38BDF8";
+        let symbolText = "🏢";
+
+        if (isSafeZone) {
+          pinColor = isPrimarySafeZone ? "#10B981" : "#059669";
+          pinBorder = "#6EE7B7";
+          symbolText = "★";
+        } else if (loc.type === "hostel") {
+          pinColor = "#D97706";
+          pinBorder = "#FBBF24";
+          symbolText = "🏠";
+        } else if (loc.type === "facility") {
+          pinColor = "#7C3AED";
+          pinBorder = "#C084FC";
+          symbolText = "🏛️";
+        } else if (loc.type === "library") {
+          pinColor = "#2563EB";
+          pinBorder = "#93C5FD";
+          symbolText = "📚";
+        } else if (loc.type === "gate") {
+          pinColor = "#475569";
+          pinBorder = "#94A3B8";
+          symbolText = "🚪";
+        }
 
         const iconSvg = `
-          <svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17 0C7.6 0 0 7.6 0 17C0 29.8 17 42 17 42C17 42 34 29.8 34 17C34 7.6 26.4 0 17 0Z" fill="${isRecommended ? "#10B981" : "#059669"}" stroke="#FFFFFF" stroke-width="2"/>
-            <circle cx="17" cy="16" r="10" fill="#047857"/>
-            <text x="17" y="20" font-family="sans-serif" font-size="12" font-weight="bold" fill="#FFFFFF" text-anchor="middle">★</text>
+          <svg width="32" height="38" viewBox="0 0 32 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.16 0 0 7.16 0 16C0 27.5 16 38 16 38C16 38 32 27.5 32 16C32 7.16 24.84 0 16 0Z" fill="${pinColor}" stroke="${pinBorder}" stroke-width="2"/>
+            <circle cx="16" cy="15" r="9" fill="#0F172A"/>
+            <text x="16" y="19" font-family="sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${symbolText}</text>
           </svg>
         `;
 
         const marker = new window.google.maps.Marker({
-          position: { lat: sz.lat, lng: sz.lng },
+          position: { lat: loc.lat, lng: loc.lng },
           map: map,
-          title: sz.name,
+          title: loc.name,
           icon: {
             url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(iconSvg)}`,
-            scaledSize: new window.google.maps.Size(34, 42),
-            anchor: new window.google.maps.Point(17, 42)
+            scaledSize: new window.google.maps.Size(30, 36),
+            anchor: new window.google.maps.Point(15, 36)
           }
         });
 
         const infoWindow = new window.google.maps.InfoWindow({
           content: `
-            <div style="background:#0F172A; color:#F8FAFC; padding:8px 12px; border-radius:12px; font-family:sans-serif; border:1px solid #10B981; max-width:240px;">
-              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:800; color:#34D399;">${sz.name}</h4>
-              <p style="margin:0 0 4px 0; font-size:11px; color:#CBD5E1;">Type: ${sz.type}</p>
-              <p style="margin:0; font-size:11px; color:#94A3B8;">Capacity: <b>${sz.currentOccupancy} / ${sz.capacity}</b></p>
-              ${isRecommended ? '<p style="margin:4px 0 0 0; font-size:10px; font-weight:bold; color:#6EE7B7;">★ PRIMARY SAFE ASSEMBLY ZONE</p>' : ''}
+            <div style="background:#0F172A; color:#F8FAFC; padding:8px 12px; border-radius:12px; font-family:sans-serif; border:1px solid ${pinBorder}; max-width:240px;">
+              <h4 style="margin:0 0 3px 0; font-size:13px; font-weight:800; color:${pinBorder};">${loc.name}</h4>
+              <p style="margin:0 0 4px 0; font-size:11px; color:#CBD5E1;">${loc.fullName}</p>
+              <p style="margin:0; font-size:10px; color:#94A3B8;">Category: <b>${loc.category}</b></p>
+              ${isSafeZone ? `<p style="margin:4px 0 0 0; font-size:10px; font-weight:bold; color:#34D399;">★ VERIFIED SAFE ASSEMBLY ZONE (Capacity: ${loc.safeZoneCapacity || 1500})</p>` : ''}
             </div>
           `
         });
 
         marker.addListener("click", () => {
           infoWindow.open(map, marker);
-          setSelectedItem({ type: "SAFE_ZONE", data: sz });
+          setSelectedItem({ type: "LOCATION", data: loc });
+          setSelectedStartLocationId(loc.id);
         });
 
         markersRef.current.push(marker);
       });
     }
 
-    // B. CAMPUS BUILDINGS
-    if (showBuildings) {
-      CAMPUS_LOCATIONS.forEach((b) => {
-        const iconSvg = `
-          <svg width="28" height="34" viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14 0C6.3 0 0 6.3 0 14C0 24.5 14 34 14 34C14 34 28 24.5 28 14C28 6.3 21.7 0 14 0Z" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
-            <rect x="8" y="7" width="12" height="13" rx="1.5" fill="#0284C7"/>
-            <rect x="10" y="9" width="2.5" height="2.5" fill="#FFFFFF"/>
-            <rect x="15.5" y="9" width="2.5" height="2.5" fill="#FFFFFF"/>
-            <rect x="10" y="14" width="2.5" height="2.5" fill="#FFFFFF"/>
-            <rect x="15.5" y="14" width="2.5" height="2.5" fill="#FFFFFF"/>
-          </svg>
-        `;
-
-        const marker = new window.google.maps.Marker({
-          position: { lat: b.lat, lng: b.lng },
-          map: map,
-          title: b.name,
-          icon: {
-            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(iconSvg)}`,
-            scaledSize: new window.google.maps.Size(26, 32),
-            anchor: new window.google.maps.Point(13, 32)
-          }
-        });
-
-        const infoWindow = new window.google.maps.InfoWindow({
-          content: `
-            <div style="background:#0F172A; color:#F8FAFC; padding:8px 12px; border-radius:12px; font-family:sans-serif; border:1px solid #0284C7; max-width:240px;">
-              <h4 style="margin:0 0 4px 0; font-size:13px; font-weight:800; color:#38BDF8;">${b.name}</h4>
-              <p style="margin:0 0 2px 0; font-size:11px; color:#CBD5E1;">Category: ${b.category}</p>
-              <p style="margin:0; font-size:11px; color:#94A3B8;">Occupancy: <b>${b.occupancy}</b> | ${b.floors} Floors</p>
-            </div>
-          `
-        });
-
-        marker.addListener("click", () => {
-          infoWindow.open(map, marker);
-          setSelectedItem({ type: "BUILDING", data: b });
-        });
-
-        markersRef.current.push(marker);
-      });
-    }
-
-    // C. CCTV CAMERAS (Strictly ADMIN & SECURITY Only)
+    // B. CCTV CAMERAS (STRICTLY ADMIN & SECURITY ONLY)
     if (showCameras && isAuthorizedForCameras) {
       CAMPUS_CAMERAS.forEach((cam) => {
         const iconSvg = `
-          <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="13" cy="13" r="12" fill="#0F172A" stroke="#06B6D4" stroke-width="2"/>
-            <circle cx="13" cy="13" r="5" fill="#22D3EE"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="11" fill="#0F172A" stroke="#06B6D4" stroke-width="2"/>
+            <circle cx="12" cy="12" r="4" fill="#22D3EE"/>
           </svg>
         `;
 
         const marker = new window.google.maps.Marker({
           position: { lat: cam.lat, lng: cam.lng },
           map: map,
-          title: cam.name,
+          title: `CCTV: ${cam.name}`,
           icon: {
             url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(iconSvg)}`,
-            scaledSize: new window.google.maps.Size(24, 24),
-            anchor: new window.google.maps.Point(12, 12)
+            scaledSize: new window.google.maps.Size(22, 22),
+            anchor: new window.google.maps.Point(11, 11)
           }
         });
 
         const infoWindow = new window.google.maps.InfoWindow({
           content: `
             <div style="background:#0F172A; color:#F8FAFC; padding:8px 12px; border-radius:12px; font-family:sans-serif; border:1px solid #06B6D4; max-width:220px;">
-              <h4 style="margin:0 0 4px 0; font-size:12px; font-weight:800; color:#22D3EE;">${cam.id}: ${cam.name}</h4>
+              <h4 style="margin:0 0 3px 0; font-size:12px; font-weight:800; color:#22D3EE;">${cam.id}: ${cam.name}</h4>
               <p style="margin:0; font-size:10px; color:#94A3B8;">Status: <b style="color:#34D399;">${cam.status}</b> (${cam.aiConfidence}% AI Confidence)</p>
             </div>
           `
@@ -247,30 +271,29 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
       });
     }
 
-    // D. USER LOCATION PIN (If Enabled)
+    // C. USER CURRENT LOCATION (GPS)
     if (userLocation) {
       const userSvg = `
-        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="15" cy="15" r="14" fill="#3B82F6" fill-opacity="0.3" stroke="#60A5FA" stroke-width="1.5"/>
-          <circle cx="15" cy="15" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" fill="#3B82F6" fill-opacity="0.35" stroke="#60A5FA" stroke-width="2"/>
+          <circle cx="16" cy="16" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
         </svg>
       `;
 
       const userMarker = new window.google.maps.Marker({
         position: userLocation,
         map: map,
-        title: "Your Current Location",
+        title: "Your GPS Location",
         icon: {
           url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(userSvg)}`,
-          scaledSize: new window.google.maps.Size(30, 30),
-          anchor: new window.google.maps.Point(15, 15)
+          scaledSize: new window.google.maps.Size(32, 32),
+          anchor: new window.google.maps.Point(16, 16)
         }
       });
-
       markersRef.current.push(userMarker);
     }
 
-    // E. ACTIVE EMERGENCY INCIDENT & TRANSLUCENT DANGER RADIUS
+    // D. DANGER ZONES & ACTIVE EMERGENCY INCIDENT
     if (activeIncident) {
       const incidentType = (activeIncident.type || "FIRE").toUpperCase();
       const hazardRadius = activeIncident.hazardRadius || 85;
@@ -293,10 +316,10 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
       // 1. Outer Translucent Danger Circle
       const dangerCircle = new window.google.maps.Circle({
         strokeColor: theme.stroke,
-        strokeOpacity: 0.85,
-        strokeWeight: 2,
+        strokeOpacity: 0.9,
+        strokeWeight: 2.5,
         fillColor: theme.fill,
-        fillOpacity: 0.28,
+        fillOpacity: 0.3,
         map: map,
         center: incidentCoords,
         radius: hazardRadius
@@ -306,22 +329,22 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
       // 2. Inner Pulsing Core Circle
       const innerCoreCircle = new window.google.maps.Circle({
         strokeColor: theme.stroke,
-        strokeOpacity: 0.95,
+        strokeOpacity: 1,
         strokeWeight: 2,
         fillColor: theme.fill,
-        fillOpacity: 0.45,
+        fillOpacity: 0.5,
         map: map,
         center: incidentCoords,
-        radius: hazardRadius * 0.4
+        radius: hazardRadius * 0.45
       });
       circlesRef.current.push(innerCoreCircle);
 
       // 3. Emergency Incident Pin
       const emergencySvg = `
-        <svg width="40" height="48" viewBox="0 0 40 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20 0C8.95 0 0 8.95 0 20C0 35 20 48 20 48C20 48 40 35 40 20C40 8.95 31.05 0 20 0Z" fill="${theme.stroke}" stroke="#FFFFFF" stroke-width="2.5"/>
-          <circle cx="20" cy="19" r="12" fill="#7F1D1D"/>
-          <text x="20" y="24" font-family="sans-serif" font-size="14" text-anchor="middle">${theme.emoji}</text>
+        <svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 0C9.4 0 0 9.4 0 21C0 36.5 21 50 21 50C21 50 42 36.5 42 21C42 9.4 32.6 0 21 0Z" fill="${theme.stroke}" stroke="#FFFFFF" stroke-width="2.5"/>
+          <circle cx="21" cy="20" r="13" fill="#7F1D1D"/>
+          <text x="21" y="25" font-family="sans-serif" font-size="14" text-anchor="middle">${theme.emoji}</text>
         </svg>
       `;
 
@@ -331,8 +354,8 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
         title: `EMERGENCY: ${incidentType}`,
         icon: {
           url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(emergencySvg)}`,
-          scaledSize: new window.google.maps.Size(40, 48),
-          anchor: new window.google.maps.Point(20, 48)
+          scaledSize: new window.google.maps.Size(42, 50),
+          anchor: new window.google.maps.Point(21, 50)
         },
         animation: window.google.maps.Animation.BOUNCE
       });
@@ -342,124 +365,92 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
       });
 
       markersRef.current.push(incidentMarker);
+    }
 
-      // 4. Calculate Real Google Maps Directions Evacuation Route
-      if (showEvacuationRoute) {
-        calculateRealEvacuationRoute(incidentCoords, SAFE_ZONES[0]);
-      }
+    // E. BLOCKED ROAD SEGMENTS (RED DASHED LINES)
+    if (blockedEdgeIds.length > 0) {
+      blockedEdgeIds.forEach(edgeId => {
+        const edge = CAMPUS_ROAD_EDGES.find(e => e.id === edgeId);
+        if (!edge) return;
+        const nodeA = ALL_NETWORK_NODES[edge.from];
+        const nodeB = ALL_NETWORK_NODES[edge.to];
+        if (!nodeA || !nodeB) return;
+
+        const blockedLine = new window.google.maps.Polyline({
+          path: [{ lat: nodeA.lat, lng: nodeA.lng }, { lat: nodeB.lat, lng: nodeB.lng }],
+          strokeColor: "#EF4444",
+          strokeOpacity: 0.9,
+          strokeWeight: 5,
+          map: map
+        });
+        blockedPolylinesRef.current.push(blockedLine);
+      });
+    }
+
+    // F. DYNAMIC VIGNAN CAMPUS EVACUATION ROUTE WITH DIRECTIONAL ARROWS
+    if (routeResult && routeResult.coordinates && routeResult.coordinates.length > 1) {
+      // 1. Ambient Glow Underlay
+      const glowPolyline = new window.google.maps.Polyline({
+        path: routeResult.coordinates,
+        geodesic: true,
+        strokeColor: "#06B6D4",
+        strokeOpacity: 0.45,
+        strokeWeight: 10,
+        map: map
+      });
+      routePolylineRef.current = glowPolyline;
+
+      // 2. Main High-Contrast Evacuation Line with Directional Arrows
+      const lineSymbol = {
+        path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 3,
+        strokeColor: "#FFFFFF",
+        fillColor: "#38BDF8",
+        fillOpacity: 1
+      };
+
+      const arrowPolyline = new window.google.maps.Polyline({
+        path: routeResult.coordinates,
+        geodesic: true,
+        strokeColor: "#0EA5E9",
+        strokeOpacity: 0.95,
+        strokeWeight: 5,
+        icons: [
+          {
+            icon: lineSymbol,
+            offset: "20%",
+            repeat: "70px"
+          }
+        ],
+        map: map
+      });
+      arrowPolylineRef.current = arrowPolyline;
     }
   }, [
-    showBuildings,
-    showSafeZones,
+    showLocations,
     showCameras,
-    showEvacuationRoute,
     isAuthorizedForCameras,
     userLocation,
     activeIncident,
+    blockedEdgeIds,
+    routeResult,
     clearMapOverlays
   ]);
 
-  // 3. Real Google Maps Directions Evacuation Route Calculation
-  const calculateRealEvacuationRoute = (originCoords, destinationZone) => {
-    const map = mapInstanceRef.current;
-    if (!map || !window.google || !window.google.maps) return;
-
-    try {
-      const directionsService = new window.google.maps.DirectionsService();
-
-      const origin = originCoords
-        ? new window.google.maps.LatLng(originCoords.lat, originCoords.lng)
-        : new window.google.maps.LatLng(CAMPUS_LOCATIONS[0].lat, CAMPUS_LOCATIONS[0].lng);
-
-      const destination = new window.google.maps.LatLng(
-        destinationZone.lat,
-        destinationZone.lng
-      );
-
-      directionsService.route(
-        {
-          origin: origin,
-          destination: destination,
-          travelMode: window.google.maps.TravelMode.WALKING
-        },
-        (result, status) => {
-          if (status === window.google.maps.DirectionsStatus.OK && result) {
-            const leg = result.routes[0]?.legs[0];
-            if (leg) {
-              setRouteInfo({
-                distanceText: leg.distance?.text || "420 m",
-                durationText: leg.duration?.text || "5 min",
-                destinationName: destinationZone.name,
-                destinationCoords: destinationZone,
-                isCalculated: true
-              });
-            }
-
-            // Draw glowing custom polyline
-            if (routePolylineRef.current) {
-              routePolylineRef.current.setMap(null);
-            }
-
-            const path = result.routes[0].overview_path;
-            const polyline = new window.google.maps.Polyline({
-              path: path,
-              geodesic: true,
-              strokeColor: "#10B981",
-              strokeOpacity: 0.95,
-              strokeWeight: 6,
-              map: map
-            });
-
-            routePolylineRef.current = polyline;
-          } else {
-            // Smooth Fallback direct polyline if walking directions unavailable
-            const fallbackPath = [origin, destination];
-            if (routePolylineRef.current) routePolylineRef.current.setMap(null);
-
-            const fallbackPolyline = new window.google.maps.Polyline({
-              path: fallbackPath,
-              strokeColor: "#10B981",
-              strokeOpacity: 0.85,
-              strokeWeight: 5,
-              map: map
-            });
-
-            routePolylineRef.current = fallbackPolyline;
-            setRouteInfo({
-              distanceText: "380 m",
-              durationText: "4 min",
-              destinationName: destinationZone.name,
-              destinationCoords: destinationZone,
-              isCalculated: true
-            });
-          }
-        }
-      );
-    } catch (e) {
-      console.warn("[CampusMap] Directions calculation error:", e);
-    }
-  };
-
-  // Re-render overlays when dependencies update
+  // Re-render when maps or dependencies update
   useEffect(() => {
     if (mapsLoaded && mapInstanceRef.current) {
       renderMapLayers();
     }
   }, [mapsLoaded, renderMapLayers]);
 
-  // 4. Map Control Handlers
+  // 5. Controls Handlers
   const handleZoomIn = () => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() + 1);
-    }
+    if (mapInstanceRef.current) mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() + 1);
   };
-
   const handleZoomOut = () => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() - 1);
-    }
+    if (mapInstanceRef.current) mapInstanceRef.current.setZoom(mapInstanceRef.current.getZoom() - 1);
   };
-
   const handleToggle3D = () => {
     if (mapInstanceRef.current) {
       const next3D = !is3DMode;
@@ -468,59 +459,53 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
       mapInstanceRef.current.setHeading(next3D ? 90 : 0);
     }
   };
-
   const handleResetCampus = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.panTo({
-        lat: CAMPUS_CENTER.lat,
-        lng: CAMPUS_CENTER.lng
-      });
+      mapInstanceRef.current.panTo({ lat: CAMPUS_CENTER.lat, lng: CAMPUS_CENTER.lng });
       mapInstanceRef.current.setZoom(CAMPUS_CENTER.zoom);
       mapInstanceRef.current.setTilt(is3DMode ? 60 : 0);
       mapInstanceRef.current.setHeading(is3DMode ? 90 : 0);
     }
   };
 
-  // 5. My Location Button (Requires explicit user click — never on auto-load)
   const handleMyLocation = () => {
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser.");
       return;
     }
-
     setIsLocating(true);
     setLocationError(null);
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const coords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        };
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(coords);
         setIsLocating(false);
-
         if (mapInstanceRef.current) {
           mapInstanceRef.current.panTo(coords);
           mapInstanceRef.current.setZoom(19);
         }
-
-        // Compute route from user location to nearest safe zone
-        calculateRealEvacuationRoute(coords, SAFE_ZONES[0]);
       },
       (err) => {
         setIsLocating(false);
-        setLocationError("Unable to retrieve your location. Check GPS permissions.");
-        console.warn("[CampusMap] Geolocation error:", err);
+        setLocationError("Unable to acquire GPS location. Using campus starting point.");
+        console.warn("[CampusMap] GPS error:", err);
       },
       { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  // Toggle Road Blockage (Admin & Security Feature)
+  const handleToggleBlockEdge = (edgeId) => {
+    setBlockedEdgeIds(prev =>
+      prev.includes(edgeId) ? prev.filter(id => id !== edgeId) : [...prev, edgeId]
     );
   };
 
   const isEmergencyActive = !!activeIncident || !!activeEmergencyEvent;
   const currentIncident = activeIncident || {
     type: activeEmergencyEvent?.eventType || "FIRE",
-    location: activeEmergencyEvent?.affectedArea || "Main Academic Block (A-Block)",
+    location: activeEmergencyEvent?.affectedArea || "A-Block (Administration)",
     severity: activeEmergencyEvent?.severity || "HIGH",
     confidence: 94
   };
@@ -528,7 +513,7 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
   return (
     <div className="w-full flex flex-col lg:flex-row items-stretch gap-4 animate-fade-in box-border">
       {/* ============================================================ */}
-      {/* LEFT SECTION (75%): 3D GOOGLE CAMPUS MAP & CONTROLS          */}
+      {/* LEFT SECTION (73%): 3D GOOGLE CAMPUS MAP & CONTROLS          */}
       {/* ============================================================ */}
       <div className="w-full lg:w-[73%] flex flex-col space-y-3">
         {/* Map Viewport Card */}
@@ -536,7 +521,7 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
           {/* Google Maps Container */}
           <div ref={mapContainerRef} className="w-full h-full" />
 
-          {/* Fallback Loading Skeleton */}
+          {/* Loading Fallback */}
           {!mapsLoaded && (
             <div className="absolute inset-0 bg-[#0B1220] flex flex-col items-center justify-center space-y-3 z-10">
               <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
@@ -546,24 +531,24 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
             </div>
           )}
 
-          {/* Top-Left Campus Header Overlay */}
-          <div className="absolute top-3.5 left-3.5 z-20 flex items-center space-x-2 bg-[#0B1220]/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-[#1E2C48] shadow-xl">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-            </span>
-            <div className="text-left">
+          {/* Top-Left Campus Branding & Active Route Notice */}
+          <div className="absolute top-3.5 left-3.5 z-20 flex flex-col space-y-1.5 bg-[#0B1220]/92 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-[#1E2C48] shadow-xl max-w-sm">
+            <div className="flex items-center space-x-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
               <h3 className="text-xs font-black text-white leading-tight">
-                Vignan University • 3D Vector Map
+                Vignan University • 3D Campus Network
               </h3>
-              <p className="text-[10px] font-mono text-cyan-400">
-                Vadlamudi, Guntur (16.2333°N, 80.5509°E)
-              </p>
             </div>
+            <p className="text-[10px] font-mono text-cyan-300">
+              15 Verified Buildings • Dynamic AI Evacuation Routing
+            </p>
           </div>
 
-          {/* Top-Right Quick Map Action Controls */}
-          <div className="absolute top-3.5 right-3.5 z-20 flex items-center space-x-1.5 bg-[#0B1220]/90 backdrop-blur-md p-1.5 rounded-2xl border border-[#1E2C48] shadow-xl">
+          {/* Top-Right Quick Map Controls */}
+          <div className="absolute top-3.5 right-3.5 z-20 flex items-center space-x-1.5 bg-[#0B1220]/92 backdrop-blur-md p-1.5 rounded-2xl border border-[#1E2C48] shadow-xl">
             {/* 3D / 2D Tilt Toggle */}
             <button
               type="button"
@@ -578,7 +563,7 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
               {is3DMode ? "3D ON" : "2D FLAT"}
             </button>
 
-            {/* My Location (GPS) */}
+            {/* GPS My Location */}
             <button
               type="button"
               onClick={handleMyLocation}
@@ -589,7 +574,7 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
               <Crosshair className={`w-4 h-4 ${isLocating ? "animate-spin text-cyan-400" : ""}`} />
             </button>
 
-            {/* Reset Campus Center */}
+            {/* Reset Campus View */}
             <button
               type="button"
               onClick={handleResetCampus}
@@ -598,6 +583,22 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
             >
               <Compass className="w-4 h-4 text-cyan-400" />
             </button>
+
+            {/* Admin / Security Route Editor Toggle */}
+            {isAuthorizedForSecurity && (
+              <button
+                type="button"
+                onClick={() => setShowRouteEditor(prev => !prev)}
+                className={`p-1.5 rounded-xl border transition-colors ${
+                  showRouteEditor
+                    ? "bg-amber-600 border-amber-400 text-white"
+                    : "bg-[#141D32] border-[#1E2C48] text-amber-300 hover:bg-[#1A2640]"
+                }`}
+                title="Admin Route Blockage & Network Manager"
+              >
+                <Settings2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Bottom-Right Zoom Controls */}
@@ -625,21 +626,11 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
             <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer px-2 py-1 rounded-lg hover:bg-[#141D32]">
               <input
                 type="checkbox"
-                checked={showSafeZones}
-                onChange={(e) => setShowSafeZones(e.target.checked)}
-                className="rounded bg-slate-900 border-slate-700 text-emerald-600 focus:ring-0"
-              />
-              <span className="font-bold text-emerald-400">★ Safe Zones ({SAFE_ZONES.length})</span>
-            </label>
-
-            <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer px-2 py-1 rounded-lg hover:bg-[#141D32]">
-              <input
-                type="checkbox"
-                checked={showBuildings}
-                onChange={(e) => setShowBuildings(e.target.checked)}
+                checked={showLocations}
+                onChange={(e) => setShowLocations(e.target.checked)}
                 className="rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0"
               />
-              <span>Buildings ({CAMPUS_LOCATIONS.length})</span>
+              <span className="font-semibold text-sky-300">🏢 Locations (15)</span>
             </label>
 
             {/* STRICT ADMIN & SECURITY CAMERA TOGGLE */}
@@ -651,27 +642,105 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
                   onChange={(e) => setShowCameras(e.target.checked)}
                   className="rounded bg-slate-900 border-slate-700 text-cyan-600 focus:ring-0"
                 />
-                <span className="text-cyan-300">📷 CCTV Feeds ({CAMPUS_CAMERAS.length})</span>
+                <span className="text-cyan-300">📷 CCTV Feeds (8)</span>
               </label>
+            )}
+
+            {blockedEdgeIds.length > 0 && (
+              <span className="px-2 py-0.5 rounded-md bg-red-950 text-red-300 font-mono text-[10px] font-bold border border-red-700 flex items-center space-x-1">
+                <Ban className="w-3 h-3" />
+                <span>{blockedEdgeIds.length} PATHS BLOCKED</span>
+              </span>
             )}
           </div>
         </div>
 
-        {/* Location Error Notice if GPS Fails */}
+        {/* Location Error Notice */}
         {locationError && (
           <div className="text-xs font-mono text-amber-400 bg-amber-950/60 p-2.5 rounded-xl border border-amber-800 flex items-center justify-between">
             <span>⚠️ {locationError}</span>
             <button onClick={() => setLocationError(null)} className="text-slate-400 hover:text-white">✕</button>
           </div>
         )}
+
+        {/* ADMIN / SECURITY ROAD BLOCKAGE MANAGER MODAL / ACCORDION */}
+        {showRouteEditor && isAuthorizedForSecurity && (
+          <div className="p-4 rounded-2xl bg-[#0F1626] border-2 border-amber-500/70 shadow-xl space-y-3 animate-fade-in text-left">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1E2C48]">
+              <div className="flex items-center space-x-2">
+                <Settings2 className="w-4 h-4 text-amber-400" />
+                <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                  Admin Campus Road Blockage & Dynamic Rerouting Manager
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBlockedEdgeIds([])}
+                className="text-[10px] font-mono text-cyan-400 hover:underline"
+              >
+                Clear All Blockages
+              </button>
+            </div>
+
+            <p className="text-[11px] text-slate-300">
+              Click any campus road segment to simulate a hazard/blockage. The AI graph algorithm will instantly recompute the safest alternative route avoiding blocked segments!
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-[160px] overflow-y-auto pr-1">
+              {CAMPUS_ROAD_EDGES.map((edge) => {
+                const isBlocked = blockedEdgeIds.includes(edge.id);
+                return (
+                  <button
+                    key={edge.id}
+                    type="button"
+                    onClick={() => handleToggleBlockEdge(edge.id)}
+                    className={`p-2 rounded-xl text-left text-[11px] font-semibold border transition-all flex items-center justify-between ${
+                      isBlocked
+                        ? "bg-red-950/80 border-red-500 text-red-200"
+                        : "bg-[#141D32] border-[#1E2C48] text-slate-300 hover:bg-[#1A2640]"
+                    }`}
+                  >
+                    <span className="truncate pr-1">{edge.name}</span>
+                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                      isBlocked ? "bg-red-600 text-white" : "bg-slate-800 text-slate-400"
+                    }`}>
+                      {isBlocked ? "BLOCKED" : "OPEN"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ============================================================ */}
-      {/* RIGHT SECTION (25%): LIVE EMERGENCY STATUS PANEL             */}
+      {/* RIGHT SECTION (27%): LIVE EMERGENCY & EVACUATION ROUTE PANEL  */}
       {/* ============================================================ */}
       <div className="w-full lg:w-[27%] flex flex-col space-y-4">
+        {/* Dynamic Start Location Selector */}
+        <div className="p-4 rounded-2xl bg-[#0F1626] border border-[#1E2C48] space-y-2 text-left shadow-lg">
+          <label className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider block">
+            Select Your Starting Location:
+          </label>
+          <select
+            value={selectedStartLocationId}
+            onChange={(e) => {
+              setSelectedStartLocationId(e.target.value);
+              setUserLocation(null);
+            }}
+            className="w-full p-2.5 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs font-bold focus:outline-none focus:border-cyan-500"
+          >
+            {CAMPUS_LOCATIONS.map(loc => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name} {loc.isSafeZone ? "(Safe Zone)" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* ACTIVE EMERGENCY / PEACETIME ROUTING PANEL */}
         {isEmergencyActive ? (
-          /* ACTIVE EMERGENCY PANEL */
           <div className="p-5 rounded-3xl bg-[#0F1626] border-2 border-red-500/80 shadow-2xl space-y-4 text-left animate-pulse-glow">
             {/* Header Status */}
             <div className="flex items-center justify-between pb-3 border-b border-[#1E2C48]">
@@ -686,68 +755,74 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
               </span>
             </div>
 
-            {/* Incident Details Card */}
-            <div className="space-y-2.5">
-              <div className="bg-[#141D32] p-3 rounded-2xl border border-[#1E2C48] space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-mono text-[10px] uppercase">ACTIVE INCIDENT:</span>
-                  <span className="font-black text-red-400 uppercase">{currentIncident.type}</span>
+            {/* Incident Summary Card */}
+            <div className="bg-[#141D32] p-3 rounded-2xl border border-[#1E2C48] space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 font-mono text-[10px] uppercase">ACTIVE INCIDENT:</span>
+                <span className="font-black text-red-400 uppercase">{currentIncident.type}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 font-mono text-[10px] uppercase">SEVERITY:</span>
+                <span className="font-bold text-amber-400 font-mono">{currentIncident.severity}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 font-mono text-[10px] uppercase">EPICENTER:</span>
+                <span className="font-bold text-white text-right max-w-[140px] truncate">{currentIncident.location}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 font-mono text-[10px] uppercase">AI CONFIDENCE:</span>
+                <span className="font-bold text-cyan-400 font-mono">{currentIncident.confidence || 94}%</span>
+              </div>
+            </div>
+
+            {/* Primary Recommended Safe Zone & Real Distance */}
+            <div className="bg-[#141D32] p-3.5 rounded-2xl border border-[#1E2C48] space-y-2">
+              <div className="flex items-center space-x-2 text-emerald-400 text-xs font-bold">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>PRIMARY SAFE ASSEMBLY AREA</span>
+              </div>
+              <p className="text-xs font-black text-white">
+                {routeResult.destinationSafeZone?.fullName || "Playground (Primary Safe Zone)"}
+              </p>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#1E2C48] text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-mono block">DISTANCE:</span>
+                  <strong className="text-emerald-300 font-mono">{routeResult.distanceText}</strong>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-mono text-[10px] uppercase">SEVERITY:</span>
-                  <span className="font-bold text-amber-400 font-mono">{currentIncident.severity}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-mono text-[10px] uppercase">LOCATION:</span>
-                  <span className="font-bold text-white text-right max-w-[140px] truncate">{currentIncident.location}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-mono text-[10px] uppercase">AI CONFIDENCE:</span>
-                  <span className="font-bold text-cyan-400 font-mono">{currentIncident.confidence || 94}%</span>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-mono block">EST. WALK TIME:</span>
+                  <strong className="text-cyan-300 font-mono">{routeResult.durationText}</strong>
                 </div>
               </div>
+            </div>
 
-              {/* Recommended Safe Zone & Real Route */}
-              <div className="bg-[#141D32] p-3 rounded-2xl border border-[#1E2C48] space-y-2">
-                <div className="flex items-center space-x-2 text-emerald-400 text-xs font-bold">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>RECOMMENDED SAFE ZONE</span>
-                </div>
-                <p className="text-xs font-black text-white">
-                  {routeInfo.destinationName}
-                </p>
-
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#1E2C48] text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-mono block">DISTANCE:</span>
-                    <strong className="text-emerald-300 font-mono">{routeInfo.distanceText}</strong>
+            {/* Step-by-Step Waypoint Route Navigation */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider block">
+                CAMPUS EVACUATION WAYPOINTS:
+              </span>
+              <div className="p-3 rounded-2xl bg-[#0B101D] border border-[#1E2C48] space-y-2 text-xs">
+                {routeResult.pathNames?.map((nodeName, idx) => (
+                  <div key={idx} className="flex items-center space-x-2">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold shrink-0 ${
+                      idx === 0
+                        ? "bg-blue-600 text-white"
+                        : idx === routeResult.pathNames.length - 1
+                        ? "bg-emerald-600 text-white"
+                        : "bg-slate-800 text-cyan-300"
+                    }`}>
+                      {idx + 1}
+                    </span>
+                    <span className={`text-[11px] truncate ${
+                      idx === routeResult.pathNames.length - 1
+                        ? "font-bold text-emerald-300"
+                        : "text-slate-200"
+                    }`}>
+                      {nodeName}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-mono block">EST. TIME:</span>
-                    <strong className="text-cyan-300 font-mono">{routeInfo.durationText}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recommended Actions */}
-              <div className="bg-[#141D32] p-3 rounded-2xl border border-[#1E2C48] space-y-1.5 text-xs text-slate-300">
-                <span className="text-[10px] font-mono text-cyan-400 font-bold block uppercase">
-                  RECOMMENDED ACTION:
-                </span>
-                <ul className="space-y-1 text-[11px] text-slate-200">
-                  <li className="flex items-start space-x-1.5">
-                    <span className="text-emerald-400">✓</span>
-                    <span>Follow the green evacuation route.</span>
-                  </li>
-                  <li className="flex items-start space-x-1.5">
-                    <span className="text-emerald-400">✓</span>
-                    <span>Move calmly to Central Quadrangle.</span>
-                  </li>
-                  <li className="flex items-start space-x-1.5">
-                    <span className="text-emerald-400">✓</span>
-                    <span>Do NOT use building elevators.</span>
-                  </li>
-                </ul>
+                ))}
               </div>
             </div>
 
@@ -756,18 +831,18 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
               <button
                 type="button"
                 onClick={() => {
-                  if (mapInstanceRef.current && activeIncident?.locationCoords) {
-                    mapInstanceRef.current.panTo(activeIncident.locationCoords);
+                  if (mapInstanceRef.current && routeResult.coordinates?.[0]) {
+                    mapInstanceRef.current.panTo(routeResult.coordinates[0]);
                     mapInstanceRef.current.setZoom(19);
                   }
                 }}
                 className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-lg transition-all active:scale-95"
               >
                 <Navigation className="w-3.5 h-3.5" />
-                <span>SHOW SAFE ROUTE</span>
+                <span>FOLLOW SAFE CAMPUS ROUTE</span>
               </button>
 
-              {(currentRole === "ADMIN" || currentRole === "SECURITY") && (
+              {isAuthorizedForSecurity && (
                 <button
                   type="button"
                   onClick={() => openResolveModal(activeIncident)}
@@ -799,39 +874,52 @@ export const CampusMap = ({ height = "h-[640px]", interactive = true }) => {
                 <span>NO ACTIVE EMERGENCY</span>
               </div>
               <p className="text-[11px] text-slate-300">
-                Campus telemetry, 8 CCTV cameras, and environmental sensors online with 0 critical anomalies detected.
+                15 campus buildings and 8 CCTV feeds monitored in real-time. Standby evacuation paths verified.
               </p>
             </div>
 
-            {/* Verified Assembly Points Directory */}
+            {/* Quick Safe Route Preview from Current Selection */}
+            <div className="p-3.5 rounded-2xl bg-[#141D32] border border-[#1E2C48] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono text-[10px]">ROUTE TO PLAYGROUND:</span>
+                <span className="text-emerald-400 font-bold font-mono">{routeResult.distanceText} ({routeResult.durationText})</span>
+              </div>
+              <div className="text-[10px] font-mono text-slate-300 space-y-1">
+                <p>Origin: <b className="text-white">{routeResult.startLocationName}</b></p>
+                <p>Dest: <b className="text-emerald-400">Playground (Safe Zone)</b></p>
+              </div>
+            </div>
+
+            {/* 15 Locations Quick Pan Directory */}
             <div className="space-y-2">
               <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">
-                CAMPUS SAFE ZONES ({SAFE_ZONES.length}):
+                CAMPUS LOCATIONS (15):
               </span>
-              <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-                {SAFE_ZONES.map((sz) => (
+              <div className="space-y-1.5 max-h-[170px] overflow-y-auto pr-1">
+                {CAMPUS_LOCATIONS.map((loc) => (
                   <div
-                    key={sz.id}
+                    key={loc.id}
                     onClick={() => {
+                      setSelectedStartLocationId(loc.id);
                       if (mapInstanceRef.current) {
-                        mapInstanceRef.current.panTo({ lat: sz.lat, lng: sz.lng });
+                        mapInstanceRef.current.panTo({ lat: loc.lat, lng: loc.lng });
                         mapInstanceRef.current.setZoom(19);
                       }
-                      setSelectedItem({ type: "SAFE_ZONE", data: sz });
                     }}
-                    className="p-2.5 rounded-xl bg-[#141D32] hover:bg-[#1A2640] border border-[#1E2C48] cursor-pointer flex items-center justify-between text-xs transition-colors"
+                    className={`p-2 rounded-xl border cursor-pointer flex items-center justify-between text-xs transition-colors ${
+                      selectedStartLocationId === loc.id
+                        ? "bg-blue-950/80 border-blue-500 text-cyan-300"
+                        : "bg-[#141D32] hover:bg-[#1A2640] border-[#1E2C48] text-slate-200"
+                    }`}
                   >
-                    <div>
-                      <p className="font-bold text-white text-[11px]">{sz.name}</p>
-                      <p className="text-[9px] text-slate-400 font-mono">Capacity: {sz.capacity} Persons</p>
-                    </div>
-                    <span className="text-emerald-400 text-[10px] font-bold">★ View</span>
+                    <span className="font-bold text-[11px] truncate">{loc.name}</span>
+                    <span className="text-[9px] font-mono text-slate-400">{loc.category}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* My Location Quick Button */}
+            {/* GPS My Location Button */}
             <button
               type="button"
               onClick={handleMyLocation}
