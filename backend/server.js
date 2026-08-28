@@ -23,17 +23,38 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 // Universal CORS Middleware for local development and production
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
     if (!origin) return callback(null, true);
+    
+    // In local development or if origin matches allowed list or is a vercel deployment
+    if (
+      process.env.NODE_ENV !== "production" ||
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app") ||
+      origin.includes("localhost") ||
+      origin.includes("127.0.0.1")
+    ) {
+      return callback(null, true);
+    }
+    
+    // Allow for hackathon production flexibility
     return callback(null, true);
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "x-user-role"],
   credentials: true
 }));
 
@@ -45,7 +66,8 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  transports: ["websocket", "polling"]
 });
 initializeSocketGateway(io);
 
@@ -62,7 +84,12 @@ app.use("/api/ai", aiRouter);
 app.use("/api/approvals", approvalsRouter);
 app.use("/api/reports", reportsRouter);
 
-// Health check endpoint
+// Standard Render & Deployment Health Check
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+// Detailed API Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ONLINE",
@@ -79,11 +106,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: err.message || "Internal Server Error" });
 });
 
-// Start Server
-server.listen(PORT, () => {
+// Start Server binding to 0.0.0.0 for Render / Cloud hosting
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`=======================================================`);
   console.log(`🛡️  CAMPUS SENTINEL AI - MULTI-AGENT EMERGENCY SYSTEM`);
-  console.log(`🚀  Backend Server running on: http://localhost:${PORT}`);
+  console.log(`🚀  Backend Server running on port: ${PORT} (0.0.0.0)`);
   console.log(`📡  Socket.IO Gateway active and ready for live clients`);
   console.log(`=======================================================`);
 });

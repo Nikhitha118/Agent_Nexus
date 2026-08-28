@@ -1,7 +1,8 @@
 // Campus Sentinel AI - Real-time Socket.IO Connector
 import { io } from "socket.io-client";
 
-const SOCKET_URL = "http://localhost:5000";
+const rawSocketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "");
+const SOCKET_URL = rawSocketUrl ? rawSocketUrl.replace(/\/$/, "") : "http://localhost:5000";
 
 class SocketService {
   constructor() {

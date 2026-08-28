@@ -1,5 +1,8 @@
 // Campus Sentinel AI - Frontend API Service
-const API_BASE = "http://localhost:5000/api";
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const API_BASE = rawApiUrl
+  ? (rawApiUrl.endsWith("/api") ? rawApiUrl : `${rawApiUrl.replace(/\/$/, "")}/api`)
+  : "http://localhost:5000/api";
 
 export async function fetchCampusData(userRole = "STUDENT") {
   try {

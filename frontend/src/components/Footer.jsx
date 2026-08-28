@@ -36,7 +36,7 @@ export const Footer = () => {
           <div className="flex items-center space-x-3 font-mono text-[11px]">
             <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Node.js Core Gateway: ONLINE (Port 5000)</span>
+              <span>Node.js Core Gateway: ONLINE</span>
             </span>
 
             <span className="hidden sm:inline text-slate-500">•</span>
