@@ -1,227 +1,234 @@
 # 🛡️ CAMPUS SENTINEL AI
 ### Autonomous Multi-Agent Campus Emergency Response & Resource Coordination Digital Twin
 
-> **Hackathon-Ready Enterprise Web Platform**  
-> *Real-time Edge Vision Perception → Temporal Verification → Autonomous Multi-Agent Orchestration → Safety-Weighted A\* Evacuation Routing → Segregated Responder Transit → Dynamic Real-time Re-Planning → Human-in-the-Loop Governance & Tamper-Evident Audit Trails.*
+> **Location:** Vignan's Foundation for Science, Technology & Research (VFSTR), Vadlamudi, Guntur, Andhra Pradesh, India – 522213  
+> **Platform:** Full-Stack Autonomous Multi-Agent Incident Response & Campus Assistance System  
+> *Real-time Geofenced GPS Perception → Natural Voice NLP Parsing → Multi-Modal Evidence Analysis → Autonomous Multi-Agent Dispatch → Safety-Weighted Evacuation Routing → Real-time Socket Synchronization → Role-Based Operations Dashboards.*
 
 ---
 
-## 1. Problem Statement & Executive Summary
+## 📌 1. Executive Summary & Overview
 
-During campus emergencies (fires, chemical leaks, medical traumas, security breaches), traditional emergency response suffers from critical delays, panic bottlenecks, uncoordinated first-responder dispatches, and rigid static evacuation plans that send students directly into spreading hazard zones.
+During campus emergencies (fires, medical emergencies, security incidents, severe weather, crowd surges), traditional response mechanisms suffer from communication latency, panic bottlenecks, uncoordinated first-responder dispatches, and lack of real-time spatial awareness.
 
-**Campus Sentinel AI** creates an **Emergency Digital Twin** of the university campus. By linking optical CCTV feeds/webcams with a 32-node weighted navigation graph and autonomous specialized AI agents, the platform continuously assesses threats, eliminates false alarms with temporal confirmation buffers, calculates the **safest** (not just shortest) evacuation route, balances crowd load across assembly zones, dispatches nearest first responders, and **dynamically re-plans alternative safe routes in real time** when road blockages occur.
+**Campus Sentinel AI** solves this by establishing a **Live Digital Twin & Location-Aware Emergency Response System** specifically calibrated for the **Vignan University (VFSTR) Vadlamudi Campus**:
+- **Real Campus Geofencing**: Point-in-Polygon (Ray-Casting) boundary verification covering the entire VFSTR Vadlamudi campus (~16.2300°N–16.2375°N, 80.5455°E–80.5540°E).
+- **Location-Aware Real GPS**: Browser Geolocation API (`navigator.geolocation.watchPosition`) tracking true physical coordinates with automated accuracy and geofence state management.
+- **15 Verified Official Locations**: Exact geotagged coordinates for academic blocks, research labs, hostels, dining halls, sports stadiums, and official safe assembly zones.
+- **Emergency AI Voice Perception**: Natural voice recognition that automatically extracts structured incident types, campus blocks, floors, and rooms from spoken descriptions in real time.
+- **Interactive Satellite & Street Digital Twin Map**: High-resolution Esri World Imagery aerial maps and OpenStreetMap street networks with dynamic hazard perimeters and green evacuation corridors.
+- **Multi-Agent Autonomous Orchestration**: Autonomous agents (Incident Commander, Security, Medical/EMT, Fire & Facilities, Evacuation Routing, and Communications) collaborate in real time.
+- **Role-Based Operations Portals**: Tailored interfaces for Students, Faculty/Staff, Department Heads/Admin, and Emergency AI Command.
 
 ---
 
-## 2. System Architecture
+## 🏛️ 2. Verified Vignan Campus Locations & Safe Zones
+
+The digital twin models the **15 official campus locations** with verified geotagged coordinates:
+
+| # | Location ID | Official Name & Category | Verified Latitude | Verified Longitude | Safe Assembly Zone |
+|---|---|---|---|---|:---:|
+| 1 | `A_BLOCK` | **A-Block (Administrative Wing)** | `16.232529` | `80.547941` | No |
+| 2 | `H_BLOCK` | **H-Block (Visweswaraya Block - Science & Humanities)** | `16.232775` | `80.547798` | No |
+| 3 | `NTR_LIBRARY` | **NTR Vignan Central Memorial Library** | `16.233572` | `80.548722` | No |
+| 4 | `MHP` | **MHP (Mahati Pranganam Open Air Auditorium)** | `16.231920` | `80.548350` | No |
+| 5 | `N_BLOCK` | **N-Block (NTR Vignan Bhavan - CSE & IT)** | `16.234180` | `80.549650` | No |
+| 6 | `U_BLOCK` | **U-Block (Aryabhatta Block - Core Engineering)** | `16.233400` | `80.550900` | No |
+| 7 | `BOYS_HOSTEL` | **Vignan Vihar Boys Residential Complex** | `16.235120` | `80.552150` | No |
+| 8 | `PHARMACY_BLOCK` | **School of Pharmaceutical Sciences** | `16.231420` | `80.549250` | No |
+| 9 | `CONVOCATION` | **Convocation Open Lawn (Sangamithra)** | `16.232880` | `80.549120` | 🛡️ **YES (Primary)** |
+| 10 | `DINING_HALL` | **Central Student & Staff Dining Hall** | `16.234250` | `80.551180` | No |
+| 11 | `PLAYGROUND` | **Main Sports Stadium & Athletic Track** | `16.231150` | `80.551480` | 🛡️ **YES (South)** |
+| 12 | `GUEST_HOUSE` | **University VIP Executive Guest House** | `16.233950` | `80.546950` | No |
+| 13 | `LARA_CAMPUS` | **Vignan's Lara Institute of Technology & Science** | `16.236250` | `80.550480` | No |
+| 14 | `LARA_GATE` | **North Lara Perimeter Gate & Evacuation Exit** | `16.235850` | `80.549180` | 🛡️ **YES (North)** |
+| 15 | `PRIYADARSHINI_GIRLS_HOSTEL` | **Priyadarshini Women's Residence Hall** | `16.234650` | `80.547180` | No |
+
+---
+
+## 🏗️ 3. System Architecture
 
 ```mermaid
 graph TD
-    subgraph 1. Ingestion & Perception
-        WC[Browser Webcam / CCTV Stream] --> VA[Camera Vision Agent]
-        NLP[Natural Language Emergency Report] --> NLP_ENG[NLP Parsing Engine]
-        SIM[Emergency Simulation Engine] --> IC[Incident Commander Agent]
-        IMG[Modular Image Classifier] --> VA
+    subgraph 1. Ingestion & Spatial Telemetry
+        GPS[Real GPS Telemetry • watchPosition] --> GEO[VFSTR Geofence Validation]
+        MIC[Web Speech API Voice Input] --> NLP[NLP Speech Entity Extractor]
+        CAM[Surveillance Feeds CAM-01..08] --> AI_ENG[AI Multi-Modal Assessment]
+        FORM[Issue & Emergency Reporting Modals] --> DISPATCH[Central Dispatch Ingestion]
     end
 
-    subgraph 2. Multi-Agent Orchestration Layer
-        VA --> |Temporal Confirmation >80% for 3+ frames| IC
-        NLP_ENG --> IC
-        
-        IC <--> |Security Cordon & Patrol Dispatch| SA[Security Agent]
-        IC <--> |Triage Capacity & Mobile ICU| MA[Medical Agent]
-        IC <--> |Suppression Units & Utility Isolation| FA[Facilities / Fire Safety Agent]
-        IC <--> |Dijkstra / A* Safe Routing Engine| RA[Evacuation & Route Agent]
-        IC <--> |Multichannel Targeted Dispatch| CA[Communication Agent]
+    subgraph 2. Autonomous Multi-Agent Orchestration
+        GEO --> ORCH[Agent Orchestrator]
+        NLP --> ORCH
+        AI_ENG --> ORCH
+        DISPATCH --> ORCH
+
+        ORCH <--> |Tactical Perimeter & Guard Dispatch| SA[Security Agent]
+        ORCH <--> |EMT Triage & Ambulance Dispatch| MA[Medical Agent]
+        ORCH <--> |Fire Suppression & Utility Isolation| FA[Fire Safety / Facilities Agent]
+        ORCH <--> |Hazard-Aware Dijkstra/A* Pathfinding| RA[Evacuation Routing Agent]
+        ORCH <--> |Multichannel Push & Audio Broadcast| CA[Communication Agent]
     end
 
-    subgraph 3. Governance & Delivery
-        IC --> HITL[Human-In-The-Loop Approval Gate]
-        HITL --> |Operator Approve / Reject / Modify| EXEC[Execution Pipeline]
-        EXEC --> SIO[Socket.IO Real-Time Gateway]
-        SIO --> MAP[Interactive Leaflet Vector Map]
-        SIO --> HUD[Role-Based Operational HUDs]
-        SIO --> AUDIT[Tamper-Evident Chronological Ledger]
+    subgraph 3. Real-Time Delivery & UI Interfaces
+        ORCH --> SIO[Socket.IO Gateway]
+        SIO --> MAP[Leaflet Satellite & Street Digital Twin]
+        SIO --> DASH_STU[Student Assistance Dashboard]
+        SIO --> DASH_FAC[Faculty & Staff Dashboard]
+        SIO --> DASH_ADM[Admin Incident Command Center]
+        SIO --> DASH_EMG[Emergency AI Command Center]
     end
 ```
 
 ---
 
-## 3. Autonomous Multi-Agent Hierarchy
+## ✨ 4. Key Features & Innovations
 
-| Agent | Core Responsibilities | Key Output / Metrics |
-|---|---|---|
-| **Incident Commander Agent** | Strategic assessment, severity matrix evaluation, agent aggregation, action matrix formulation | Emergency directives, approval queues |
-| **Camera Vision Agent** | Optical stream analysis, temporal frame verification buffer (>80% consecutive) | Anomaly confidence, bounding boxes |
-| **Security Agent** | Spatial Euclidean matching, perimeter containment cordon, officer dispatch | Unit assignment (`S-04`), gate lockdowns |
-| **Medical Agent** | Triage demand calculation, trauma station staging, nearest ambulance transit | Mobile ICU assignment (`A-02`), EMT squad (`M-03`) |
-| **Facilities Agent** | Fire tender mobilization, gas line shutoff (`GV-01`), HVAC smoke dampers | Tender dispatch (`FSU-03`), suppression arming |
-| **Evacuation / Route Agent** | Safety-weighted Dijkstra & A\* pathfinding, crowd-aware assembly balancing | Glowing safe route, responder route |
-| **Communication Agent** | Multichannel role-targeted alerts (Student, Staff, Security, Medical) | Real-time push, PA synthesized chimes |
+1. **Location-Aware Real GPS State Machine**:
+   - `🟢 GPS ACTIVE & CALIBRATED`: Valid GPS fix inside campus with accuracy $\le 50\text{ m}$.
+   - `🟠 OUTSIDE UNIVERSITY CAMPUS`: Real location is outside campus perimeter. Prompts user with a helpful safety advisory to select the campus block manually.
+   - `🟡 GPS ACCURACY LOW`: Degraded GPS signal ($> 50\text{ m}$).
+   - `⚪ GPS PERMISSION REQUIRED`: Geolocation unavailable or permission denied.
+   - *No fake coordinates or silent building snapping.*
 
----
+2. **Emergency AI Natural Voice Input**:
+   - Speak naturally: *"There is a fire accident in A-BLOCK, Room 302, 3rd Floor"*.
+   - Automatically populates Incident Type (`FIRE`), Campus Block (`A-BLOCK`), Floor (`3rd Floor`), Room (`Room 302`), and Specific Area (`Room 302, 3rd Floor`).
 
-## 4. Key Hackathon Innovations & WOW Features
+3. **Digital Twin Interactive Map**:
+   - Satellite View via Esri World Imagery aerial tiles + Street & Roads View via OpenStreetMap.
+   - Verified cyan geofence boundary polygon.
+   - Dynamic Haversine distance calculations from the user to every campus building.
+   - Floating telemetry card showing live coordinates, weather, rainfall, institutional zone, and nearest building.
 
-1. **Live Camera Detection Studio (`/LiveCameraStudio`)**:
-   - Real browser webcam integration via `navigator.mediaDevices.getUserMedia`.
-   - Live AI bounding box overlays with confidence progression.
-   - Temporal confirmation thresholding ($<60\%$ Anomaly, $60-80\%$ Suspicious, $>80\%$ for consecutive frames triggers alarm) to prevent false alerts.
-   - Prominent **"🔥 DEMO FIRE DETECTION"** button for judge demonstrations.
-2. **Safety-Weighted $A^*$ Evacuation Algorithm**:
-   - Calculates path cost based on distance + exponential thermal hazard proximity penalty + crowd congestion ratio + obstacle blockages:
-     $$\text{Cost}(e) = \text{Distance} + W_{\text{hazard}} \cdot \left(\frac{\text{Radius} - \text{dist}}{\text{Radius}}\right) + W_{\text{crowd}} \cdot \left(\frac{\text{Occupancy}}{\text{Capacity}}\right) + \text{BlockedPenalty}$$
-3. **Dynamic Re-Planning Engine**:
-   - Simulate a road blockage during an active emergency $\rightarrow$ the Evacuation Agent automatically detects the obstacle, recalculates the alternative safe route, pushes updates over WebSockets, and alerts affected users.
-4. **Human-in-the-Loop Governance Gate**:
-   - High-impact AI recommendations (gas main isolation, electronic door lockouts, building suppression deluge) require operator approval (`APPROVE`, `MODIFY`, `REJECT`) with tamper-evident audit logging.
-5. **Role-Based Operational HUDs**:
-   - 1-Click switcher between **Incident Commander (Admin)**, **Student (Civilian)**, **Security Officer (Tactical)**, **Paramedic (Triage)**, and **Faculty (Warden)**.
-6. **Natural Language Emergency Reporting (NLP)**:
-   - Plain English emergency description parsing (`"Smoke is coming from the 2nd floor of CSE building and 400 students are nearby"`) with automatic entity extraction.
-7. **Printable Post-Incident Debrief Report**:
-   - Generates official debrief documentation with audit hashes, timelines, map snapshot, and responder action logs.
+4. **Multi-Category Campus Issue Reporting**:
+   - Quick reporting for **Classroom Issues**, **Transportation Issues**, **Medical Assistance**, and **General Campus Infrastructure**.
+   - Photo and video attachment support with instant AI structuring and automatic departmental routing (Transport, Medical, Security, Admin).
+
+5. **Live Evacuation Guidance & Road Blockage Simulation**:
+   - Safety-weighted pathfinding routes evacuees away from active danger radii directly to verified safe assembly zones (Convocation Lawn, Stadium, Lara Gate).
+   - Real-time road blockage simulation triggers dynamic re-routing around compromised pathways.
 
 ---
 
-## 5. Technology Stack
+## 🛠️ 5. Technology Stack
 
 - **Frontend**:
   - React 18 + Vite
-  - Tailwind CSS (Dark Operations Command Center aesthetic)
-  - Leaflet & React-Leaflet (Interactive vector digital twin mapping with dark Carto tiles)
-  - Lucide React (Tactical iconography)
-  - Socket.IO Client (Zero-latency bidirectional event synchronization)
-  - Web Audio API (Synthesized tactical sirens, warbles, and chimes)
+  - Tailwind CSS + Vanilla CSS Design System (Sleek Dark Cyber Operations Theme)
+  - Leaflet + React-Leaflet (Vector & Satellite Digital Twin Mapping)
+  - Lucide React (High-contrast operational icons)
+  - Web Speech API (Browser-native speech recognition)
+  - Socket.IO Client (Low-latency bidirectional state sync)
 - **Backend**:
   - Node.js + Express.js (REST API & WebSockets)
   - Socket.IO Server
-  - In-Memory Digital Twin State Store with MongoDB Mongoose compatibility
-  - Custom Dijkstra / A\* Graph Routing Engine
-- **Hardware / Sensors**:
-  - Optical Browser Webcam / CCTV IP Camera Feed Emulation
-  - 32 Interconnected Graph Nodes & 50+ Weighted Edges
+  - In-Memory Digital Twin State Store with JSON persistence
+  - Custom Dijkstra / A\* Graph Routing & Point-in-Polygon Geofence Engine
+  - Multi-Agent Orchestrator Service
 
 ---
 
-## 6. Installation & Quickstart
+## 🚀 6. Installation & Quickstart
 
 ### Prerequisites
-- Node.js v18+ (tested on v24)
-- npm v9+
+- **Node.js** v18+ (tested on v20 and v24)
+- **npm** v9+
 
-### 1. Clone & Enter Project
+### 1. Clone the Repository
 ```bash
+git clone https://github.com/Nikhitha118/Agent_Nexus.git
 cd campus-ai
 ```
 
-### 2. Start Backend Server
+### 2. Configure Environment Variables
+Copy the example environment files:
+```bash
+# Frontend
+cp frontend/.env.example frontend/.env
+
+# Backend
+cp backend/.env.example backend/.env
+```
+
+### 3. Install Dependencies
+```bash
+# Install frontend dependencies
+npm install --prefix frontend
+
+# Install backend dependencies
+npm install --prefix backend
+```
+
+### 4. Run the Full Application
+In two separate terminal windows:
+
+**Terminal 1 (Backend):**
 ```bash
 cd backend
-npm install
 npm start
 ```
-*Backend will start on `http://localhost:5000` with the Socket.IO gateway active.*
+*Backend runs on `http://localhost:5000` with WebSocket gateway active.*
 
-### 3. Start Frontend App (in a separate terminal)
+**Terminal 2 (Frontend):**
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
-*Frontend will launch on `http://localhost:5173/`.*
+*Frontend runs on `http://localhost:5173/`.*
 
 ---
 
-## 7. Role-Based Login Credentials
+## 🔑 7. Role-Based Login Credentials
 
-Each role category has dedicated Login IDs and Passwords for demonstration and testing:
+Each university role has pre-configured credentials for demonstration and testing:
 
-| Role Category | Login ID / Email | Username | Password | Assigned Persona & Authority |
-|---|---|---|---|---|
-| 👨‍💼 **Admin / HOD / Dean** | `admin@vignan.edu` | `admin` | `admin123` | Dr. K. Ramamurthy (Full Command & Approvals) |
-| 👩‍🏫 **Faculty / Staff** | `faculty@vignan.edu` | `faculty` | `faculty123` | Prof. Ananya Sharma (Classroom Evac & Headcount) |
-| 🎓 **Student** | `student@vignan.edu` | `student` | `student123` | Rahul Verma (Safe Walking Guidance) |
-| 🛡 **Campus Security** | `security@vignan.edu` | `security` | `security123` | Sgt. Sarah Chen (Perimeter Cordon & Gate Control) |
-| 🏥 **Medical & Paramedic** | `medical@vignan.edu` | `medical` | `medical123` | Dr. Karen Thorne (Ambulance Staging & Triage) |
-| 🤖 **Emergency AI** | `ai@vignan.edu` | `ai` | `ai123` | Sentinel Autonomous AI Engine (Judge View) |
+| Role | Username / ID | Password | Authority & Capabilities |
+|---|---|---|---|
+| 🎓 **Student** | `student` or `student@vignan.edu` | `student123` | Campus Assistance, Issue Reporting, Emergency AI Voice Alert, Live Evacuation Map |
+| 👩‍🏫 **Faculty / Staff** | `faculty` or `faculty@vignan.edu` | `faculty123` | Department Triage, Student Reports View, Emergency Evacuation Coordination |
+| 👨‍💼 **Administrator / Dean** | `admin` or `admin@vignan.edu` | `admin123` | Full Incident Command, Multi-Agent Approvals, Resource Allocation, Audit Ledger |
+| 🤖 **Emergency AI** | `ai` or `ai@vignan.edu` | `ai123` | Autonomous Simulation Engine, Multi-Agent Dispatch Monitor, Live Sensor Feeds |
 
-> **Tip**: You can either type the credentials manually into the login form or click any role card on the **Switch Role** page for 1-click auto-login!
+> **Tip:** You can type credentials directly into the Secure Access Portal or click any role card on the login screen for 1-click instant login!
 
 ---
 
-## 8. Environment Variables (`.env.example`)
+## 🧪 8. Test Suites & Verification
 
-### Backend (`/backend/.env`)
-```env
-PORT=5000
-NODE_ENV=development
-CLIENT_URL=http://localhost:5173
-AI_PROVIDER=LOCAL_SENTINEL_INFERENCE
-AI_API_KEY=
-MAP_API_KEY=
-MONGODB_URI=
+To run the automated verification test suites:
+
+```bash
+# Run backend multi-agent and digital twin tests
+npm test --prefix backend
+
+# Run emergency voice NLP entity extraction test suite
+node backend/test_speech_parser.js
+
+# Run frontend production build validation
+npm run build --prefix frontend
 ```
 
 ---
 
-## 8. Exact Steps to Demonstrate the FIRE Emergency to Judges
-
-Follow this script for a presentation:
-
-1. **Open the App**:
-   - Navigate to `http://localhost:5173/`.
-   - Point out the dark emergency command center theme, top stats, and the vector Leaflet campus map.
-2. **Go to Live Camera Studio**:
-   - Click **Live Camera Studio** in the sidebar.
-   - Show the browser webcam stream or CCTV channel switcher (`CAM-01` to `CAM-08`).
-   - Click **"🔥 DEMO FIRE DETECTION"**.
-3. **Watch Multi-Agent Sequence Trigger (0 to 12 Seconds)**:
-   - Observe the 3-frame temporal confirmation meter jump to 94% CRITICAL.
-   - The top banner flashes **ACTIVE CAMPUS EMERGENCY (Main Academic Block)**.
-   - The **Incident Commander Agent** synthesizes domain insights.
-   - **Security Agent** dispatches Unit `S-04 Delta`.
-   - **Medical Agent** dispatches Ambulance `A-02` and Team `M-03`.
-   - **Facilities Agent** stages fire tender `FSU-03` and queues gas line `GV-01` shutoff.
-   - **Evacuation Agent** draws the **green glowing safe evacuation route** to Assembly Point B.
-   - **Communication Agent** broadcasts 4 role-tailored alerts with synthesized audio chimes.
-4. **Demonstrate Dynamic Re-Planning (WOW Factor)**:
-   - In the Command Center toolbar, click **"⚠️ Simulate Route Blockage (Re-Plan)"**.
-   - Notice the road segment turn red with a hazard cross, and the green route dynamically re-route to an unobstructed safe pathway in real time.
-5. **Demonstrate Human-in-the-Loop Approval**:
-   - In the amber **Human-in-the-Loop Governance Gate**, click **APPROVE** on the gas main isolation action.
-   - Notice the status update to *"✓ Action APPROVED by Authorized Operator"* and record to the audit ledger.
-6. **Demonstrate Role Views**:
-   - Click the **Student** pill in the top navbar: show the simplified safe evacuation HUD and turn-by-turn advice.
-   - Click **Paramedic / EMT**: show the medical staging point, triage capacity meter, and ambulance route.
-   - Switch back to **Incident Commander**.
-7. **Generate Printable Post-Action Debrief Report**:
-   - Click **Incident Debrief Report** on the emergency banner to show the audit-hashed printable report.
-
----
-
-## 9. API Reference
+## 📡 9. API Reference Summary
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/health` | System status, version, and orchestration engine health |
-| `GET` | `/api/campus/overview` | Campus center coordinates, building count, cameras, and summary stats |
-| `GET` | `/api/campus/graph` | 32 nodes, road edges, and dynamic blockage tags |
+| `GET` | `/api/health` | System health check and agent status |
+| `GET` | `/api/campus/overview` | Campus center coordinates, 15 building dataset, and cameras |
+| `GET` | `/api/campus/graph` | 23 graph nodes, 29 edges, and road network |
 | `GET` | `/api/incidents/active` | Current active emergency incident and agent plans |
-| `POST` | `/api/incidents/simulate` | Triggers emergency scenario (`FIRE`, `MEDICAL`, `SECURITY`, `FLOOD`, `CROWD`) |
-| `POST` | `/api/incidents/block-route` | Simulates road blockage and triggers live $A^*$ dynamic re-planning |
-| `POST` | `/api/approvals/:id/decision` | Human operator decision (`APPROVED`, `REJECTED`, `MODIFIED`) |
+| `POST` | `/api/incidents/simulate` | Triggers emergency scenario (`FIRE`, `MEDICAL`, `SECURITY`, `WEATHER`, `CROWD`) |
+| `POST` | `/api/incidents/block-route` | Simulates road blockage and triggers dynamic re-routing |
+| `POST` | `/api/approvals/:id/decision` | Human-in-the-loop operator decision (`APPROVED`, `REJECTED`) |
 | `POST` | `/api/ai/report-nlp` | Natural language emergency entity extraction |
-| `POST` | `/api/agents/frame-analysis` | Ingests camera optical frames and computes temporal buffer |
-| `GET` | `/api/audit` | Immutable audit ledger entries with verification hashes |
+| `GET` | `/api/reports` | Fetches submitted campus assistance reports with status filters |
+| `POST` | `/api/reports` | Submits a new multi-modal campus issue report |
+| `PATCH` | `/api/reports/:id/status` | Updates report resolution status and audit timeline |
 
 ---
 
-## 10. Safety Protocol Notice
+## 📜 10. License & Acknowledgements
 
-> **Prototype Disclaimer**: Campus Sentinel AI is an autonomous decision-support prototype. High-impact critical operations (utility line isolations, full gate lockouts, mass evacuations) remain subject to authorized human operator verification in compliance with university campus safety regulations.
-
----
-
-**Built with pride for the Campus AI Hackathon.**
+Developed for **Vignan's Foundation for Science, Technology & Research (VFSTR)** emergency response innovation and campus safety management.
