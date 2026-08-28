@@ -1,6 +1,7 @@
 // Campus Sentinel AI - Emergency AI Hub & Immediate Action System
 import React, { useState } from "react";
 import { useSentinel } from "../../context/SentinelContext";
+import { CAMPUS_LOCATIONS } from "../../data/vignanCampusLocations";
 import {
   Bot,
   Flame,
@@ -44,7 +45,7 @@ export const EmergencyAiDashboard = () => {
   // Confirmation Modal State
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedType, setSelectedType] = useState("FIRE");
-  const [selectedLocation, setSelectedLocation] = useState("Main Academic Block");
+  const [selectedLocation, setSelectedLocation] = useState("A-BLOCK");
   const [severityLevel, setSeverityLevel] = useState("CRITICAL");
   const [notes, setNotes] = useState("");
 
@@ -144,12 +145,13 @@ export const EmergencyAiDashboard = () => {
                 <select
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs font-bold focus:outline-none focus:border-red-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs font-mono focus:outline-none focus:border-red-500"
                 >
-                  <option value="Main Academic Block">Main Academic Block (Zone A)</option>
-                  <option value="Science Complex">Science Complex & Labs (Zone C)</option>
-                  <option value="Central Library Circle">Central Library Circle (Zone B)</option>
-                  <option value="Student Activity Center">Student Activity Center (Zone D)</option>
+                  {CAMPUS_LOCATIONS.map(loc => (
+                    <option key={loc.id} value={loc.name}>
+                      {loc.name} {loc.isSafeZone ? "(Safe Zone)" : ""}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

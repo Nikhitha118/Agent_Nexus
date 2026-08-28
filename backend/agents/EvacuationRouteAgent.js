@@ -12,10 +12,10 @@ export class EvacuationRouteAgent {
 
   calculateRoutes(incident) {
     // 1. Determine origin exit node for the affected building
-    let originNodeId = "N-01"; // Default Main Academic South Exit
+    let originNodeId = "a-block"; // Default Main Academic A-Block
     const building = campusDataService.buildings.find(b => b.id === incident.buildingId || b.name === incident.location);
-    if (building && building.exits && building.exits.length > 0) {
-      originNodeId = building.exits[0]; // e.g. N-01
+    if (building) {
+      originNodeId = building.id; // e.g. "a-block"
     }
 
     // 2. Compute crowd-aware, hazard-penalized evacuation route
@@ -27,51 +27,51 @@ export class EvacuationRouteAgent {
     // 3. Compute Responder Routes for Dispatched Vehicles
     const responderRoutes = [];
 
-    // Ambulance Route (from Ambulance staging node e.g. N-32 to Staging Hub N-00)
-    const ambulanceRoute = routingEngine.calculateResponderRoute("N-32", "N-00", { isVehicle: true });
+    // Ambulance Route (from Pharmacy Health Bay to Incident Origin)
+    const ambulanceRoute = routingEngine.calculateResponderRoute("pharmacy-block", originNodeId, { isVehicle: true });
     if (ambulanceRoute && ambulanceRoute.success) {
       responderRoutes.push({
         unitType: "AMBULANCE",
-        unitId: "A-02",
-        startLocation: "East Gate 3 Staging Post (N-32)",
-        destination: "Central Quadrangle Medical Post (N-00)",
+        unitId: "AMB-01",
+        startLocation: "Health Center Bay (Pharmacy Block)",
+        destination: `${building ? building.name : 'Incident Scene'} Main Access`,
         totalDistanceMeters: ambulanceRoute.totalDistanceMeters,
         etaMinutes: (ambulanceRoute.estimatedDriveTimeSeconds / 60).toFixed(1),
         path: ambulanceRoute.path,
         coordinates: ambulanceRoute.coordinates,
-        instructions: "Approach via East Ring Road and Central Avenue West. Maintain siren protocol."
+        instructions: "Approach via South Link and Central Avenue. Maintain emergency siren protocol."
       });
     }
 
-    // Fire Unit Route (from N-18 Security HQ Bay to Incident South Access N-01)
-    const fireUnitRoute = routingEngine.calculateResponderRoute("N-18", "N-01", { isVehicle: true });
+    // Fire Unit Route (from Dining Hall Depot to Incident Origin)
+    const fireUnitRoute = routingEngine.calculateResponderRoute("dining-hall", originNodeId, { isVehicle: true });
     if (fireUnitRoute && fireUnitRoute.success) {
       responderRoutes.push({
         unitType: "FIRE_TENDER",
-        unitId: "FSU-03",
-        startLocation: "Depot Service Way (N-18)",
-        destination: "Main Academic South Entrance (N-01)",
+        unitId: "FIRE-01",
+        startLocation: "Service Depot (Dining Hall Quad)",
+        destination: `${building ? building.name : 'Incident Scene'} South Access`,
         totalDistanceMeters: fireUnitRoute.totalDistanceMeters,
         etaMinutes: (fireUnitRoute.estimatedDriveTimeSeconds / 60).toFixed(1),
         path: fireUnitRoute.path,
         coordinates: fireUnitRoute.coordinates,
-        instructions: "Proceed via West Science Lane. Deploy foam line at South Access."
+        instructions: "Proceed via North Quad Link. Deploy water foam line at primary perimeter."
       });
     }
 
-    // Security Unit Route (S-04 Jogging to North Corridor)
-    const securityRoute = routingEngine.calculateResponderRoute("N-01", "N-40", { isVehicle: false });
+    // Security Unit Route (from Boys Hostel Guard Post to Incident Origin)
+    const securityRoute = routingEngine.calculateResponderRoute("boys-hostel", originNodeId, { isVehicle: false });
     if (securityRoute && securityRoute.success) {
       responderRoutes.push({
         unitType: "SECURITY_SQUAD",
-        unitId: "S-04",
-        startLocation: "South Promenade (N-01)",
-        destination: "North Academic Crossway (N-40)",
+        unitId: "SEC-01",
+        startLocation: "North Security Point (Boys Hostel)",
+        destination: `${building ? building.name : 'Incident Scene'} Crossway`,
         totalDistanceMeters: securityRoute.totalDistanceMeters,
         etaMinutes: (securityRoute.estimatedWalkTimeSeconds / 60).toFixed(1),
         path: securityRoute.path,
         coordinates: securityRoute.coordinates,
-        instructions: "Establish physical cordon at N-40 crossway to redirect students."
+        instructions: "Establish physical cordon around incident perimeter to guide civilian evacuation."
       });
     }
 

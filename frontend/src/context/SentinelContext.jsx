@@ -779,9 +779,24 @@ export const SentinelProvider = ({ children }) => {
     const accounts = getStoredAccounts();
     const cleanId = (loginId || "").trim().toLowerCase();
 
-    const account = accounts.find(
+    let account = accounts.find(
       a => (a.username.toLowerCase() === cleanId || a.email.toLowerCase() === cleanId)
     );
+
+    // Student Instant Verification Fallback
+    if (!account && selectedRole && selectedRole.toUpperCase() === "STUDENT" && cleanId && password === loginId) {
+      account = {
+        id: `U-STU-${loginId.toUpperCase()}`,
+        email: `${cleanId}@vignan.edu`,
+        username: cleanId,
+        password: password,
+        role: "STUDENT",
+        name: `Student (${loginId.toUpperCase()})`,
+        title: "B.Tech Student",
+        badge: "Student Civilian",
+        avatar: "🎓"
+      };
+    }
 
     if (!account) {
       return { success: false, error: "Invalid username or password." };

@@ -106,5 +106,53 @@
     "badge": "ADMIN Registered Member",
     "avatar": "👨‍💼",
     "createdAt": "2026-08-22T09:59:51.672Z"
+  },
+  {
+    "id": "U-SECURITY-MT48DCHS",
+    "email": "kurra abhi@vignan.edu",
+    "username": "kurra abhi",
+    "password": "admin1234",
+    "role": "SECURITY",
+    "name": "Abhiram",
+    "title": "231FA04635",
+    "badge": "SECURITY Registered Member",
+    "avatar": "🛡️",
+    "createdAt": "2026-08-22T10:23:42.208Z"
+  },
+  {
+    "id": "U-STUDENT-MTD1UKQT",
+    "email": "241fa04633@vignan.edu",
+    "username": "241fa04633",
+    "password": "241FA04633",
+    "role": "STUDENT",
+    "name": "alekhya",
+    "title": "cse",
+    "badge": "STUDENT Registered Member",
+    "avatar": "🎓",
+    "createdAt": "2026-08-28T14:31:04.325Z"
+  },
+  {
+    "id": "U-STUDENT-MTD244UP",
+    "email": "231fa04633@vignan.edu",
+    "username": "231fa04633",
+    "password": "231FA04633",
+    "role": "STUDENT",
+    "name": "keerthi",
+    "title": "cse",
+    "badge": "STUDENT Registered Member",
+    "avatar": "🎓",
+    "createdAt": "2026-08-28T14:38:30.290Z"
+  },
+  {
+    "id": "U-STU-241FA0463",
+    "email": "241fa0463@vignan.edu",
+    "username": "241fa0463",
+    "password": "241FA0463",
+    "role": "STUDENT",
+    "name": "Student (241FA0463)",
+    "title": "B.Tech Student",
+    "badge": "Student Civilian",
+    "avatar": "🎓",
+    "createdAt": "2026-08-28T16:25:35.740Z"
   }
 ]

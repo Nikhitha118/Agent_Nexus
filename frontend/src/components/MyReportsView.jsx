@@ -62,49 +62,49 @@ export const MyReportsView = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-6 px-4 space-y-6 animate-fade-in">
+    <div className="max-w-4xl mx-auto py-4 px-3 sm:px-4 space-y-3.5 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E2C48]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-[#1E2C48]">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center space-x-2">
-            <FileText className="w-6 h-6 text-cyan-400" />
+          <h1 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-cyan-400" />
             <span>MY SUBMITTED REPORTS & REQUESTS</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-[11px] text-slate-400">
             Track real-time status, departmental updates, and AI resolution history for your campus issues.
           </p>
         </div>
 
         <button
           onClick={() => setActiveReportingCategory("CLASSROOM")}
-          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center space-x-2 shadow-lg shadow-blue-600/20 shrink-0"
+          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-blue-600/20 shrink-0"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           <span>REPORT NEW ISSUE</span>
         </button>
       </div>
 
       {/* Controls Bar: Search & Status Filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="relative w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search your reports..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto">
           {["ALL", "NEW", "IN_PROGRESS", "RESOLVED"].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${
+              className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase transition-all ${
                 statusFilter === st
-                  ? "bg-blue-600 text-white shadow"
+                  ? "bg-blue-600 text-white shadow-sm"
                   : "bg-[#141D32] text-slate-400 hover:text-white border border-[#1E2C48]"
               }`}
             >
@@ -116,72 +116,71 @@ export const MyReportsView = () => {
 
       {/* Reports List */}
       {filteredReports.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-[#0F1626] border border-[#1E2C48] text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#141D32] text-slate-500 flex items-center justify-center mx-auto">
-            <FileText className="w-6 h-6" />
+        <div className="p-8 rounded-2xl bg-[#0F1626] border border-[#1E2C48] text-center space-y-2">
+          <div className="w-10 h-10 rounded-xl bg-[#141D32] text-slate-500 flex items-center justify-center mx-auto">
+            <FileText className="w-5 h-5" />
           </div>
-          <h3 className="text-base font-bold text-white">No Reports Found</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <h3 className="text-sm font-bold text-white">No Reports Found</h3>
+          <p className="text-xs text-slate-400 max-w-xs mx-auto">
             You haven't submitted any reports matching this filter yet. Click below to submit an issue.
           </p>
           <button
             onClick={() => setActiveReportingCategory("CLASSROOM")}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
           >
             REPORT AN ISSUE
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filteredReports.map((report) => (
             <div
               key={report.id}
               onClick={() => setSelectedReportForDetails(report)}
-              className="p-4 sm:p-5 rounded-2xl bg-[#0F1626] border border-[#1E2C48] hover:border-cyan-500/40 shadow-lg hover:shadow-cyan-500/10 transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+              className="p-3 rounded-xl bg-[#0F1626] border border-[#1E2C48] hover:border-cyan-500/40 shadow-md hover:shadow-cyan-500/10 transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 group"
             >
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${getStatusBadge(report.status)}`}>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded-full border ${getStatusBadge(report.status)}`}>
                     {report.status}
                   </span>
-                  <span className="text-[11px] font-mono text-cyan-400 font-bold">
+                  <span className="text-[10.5px] font-mono text-cyan-400 font-bold">
                     {report.id}
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
                     {report.category}
                   </span>
                 </div>
 
-                <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-cyan-300 transition-colors">
+                <h3 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
                   {report.title}
                 </h3>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-mono">
+                <p className="text-[10px] text-slate-400 line-clamp-1">
+                  {report.description}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3 text-[9.5px] text-slate-400 font-mono pt-0.5">
                   <span className="flex items-center space-x-1">
-                    <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                    <MapPin className="w-3 h-3 text-slate-500" />
                     <span>{report.location}</span>
                   </span>
-                  <span>•</span>
                   <span className="flex items-center space-x-1">
-                    <Building className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Assigned: <strong className="text-white">{report.routedDepartment}</strong></span>
+                    <Building className="w-3 h-3 text-slate-500" />
+                    <span>Routed: {report.routedDepartment}</span>
                   </span>
-                  <span>•</span>
                   <span className="flex items-center space-x-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-500" />
-                    <span>{new Date(report.createdAt).toLocaleDateString()}</span>
+                    <Clock className="w-3 h-3 text-slate-500" />
+                    <span>{new Date(report.createdAt).toLocaleString()}</span>
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 self-end sm:self-center shrink-0">
-                <button
-                  type="button"
-                  className="px-3.5 py-1.5 rounded-xl bg-[#141D32] hover:bg-slate-800 text-cyan-400 border border-[#1E2C48] text-xs font-bold flex items-center space-x-1.5"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>VIEW DETAILS</span>
-                </button>
+              <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-1 self-stretch sm:self-center shrink-0">
+                <span className="text-[11px] font-bold text-cyan-400 group-hover:underline flex items-center space-x-1">
+                  <span>Track Status</span>
+                  <ArrowRight className="w-3 h-3" />
+                </span>
               </div>
             </div>
           ))}

@@ -30,10 +30,11 @@ const frontendProcess = spawn(npmCmd, ["run", "dev"], {
   shell: true
 });
 
+
 const cleanup = () => {
   console.log("\n🛑 Stopping Campus Sentinel AI servers...");
-  try { backendProcess.kill(); } catch (e) {}
-  try { frontendProcess.kill(); } catch (e) {}
+  try { backendProcess.kill(); } catch (e) { }
+  try { frontendProcess.kill(); } catch (e) { }
   process.exit(0);
 };
 

@@ -29,15 +29,8 @@ const MainContent = () => {
   // 1. Campus Map Tab
   if (activeTab === "MAP") {
     return (
-      <div className="w-full max-w-[1700px] mx-auto py-6 px-3 sm:px-4 lg:px-6 space-y-4 box-border">
-        <div className="flex items-center justify-between pb-2 border-b border-[#1E2C48]">
-          <div>
-            <h2 className="text-xl font-black text-white">Vignan University • 3D Campus Digital Twin</h2>
-            <p className="text-xs text-slate-400">Interactive 3D Vector Map, real-time emergency routing & safe assembly topography</p>
-          </div>
-          <span className="text-xs font-mono text-cyan-400">12 Buildings • 5 Safe Zones • 8 CCTV Nodes</span>
-        </div>
-        <CampusMap height="h-[640px]" interactive={true} />
+      <div className="w-full h-[calc(100vh-56px)] p-2 sm:p-3 box-border">
+        <CampusMap height="h-full" interactive={true} />
       </div>
     );
   }
@@ -116,10 +109,10 @@ function AppContent() {
     successToast
   } = useSentinel();
 
-  // If unauthenticated, render dedicated Login / Role Selection portal with Emergency AI floating button & modal
+  // If unauthenticated, render dedicated Login / Role Selection portal with modal and Emergency AI button
   if (!isAuthenticated || !currentUser) {
     return (
-      <div className="relative min-h-screen w-full">
+      <div className="relative min-h-screen w-full bg-[#080B13]">
         <LoginPage />
         <EmergencyAiQuickButton />
         <EmergencyAiQuickModal />
@@ -164,10 +157,56 @@ function AppContent() {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("[Campus Sentinel ErrorBoundary Caught]:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen w-full bg-[#080B13] text-slate-100 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-red-950/80 border border-red-500/60 flex items-center justify-center text-red-400 mx-auto shadow-xl">
+            <span className="text-2xl font-bold">🛡️</span>
+          </div>
+          <div className="space-y-1 max-w-md">
+            <h2 className="text-xl font-black text-white">Campus Sentinel Recovery</h2>
+            <p className="text-xs text-slate-400">
+              An interface error occurred. The system has automatically isolated the state.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem("sentinel_session");
+              window.location.reload();
+            }}
+            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all"
+          >
+            RELOAD SENTINEL INTERFACE
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <SentinelProvider>
-      <AppContent />
-    </SentinelProvider>
+    <ErrorBoundary>
+      <SentinelProvider>
+        <AppContent />
+      </SentinelProvider>
+    </ErrorBoundary>
   );
 }

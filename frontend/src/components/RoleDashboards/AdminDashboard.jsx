@@ -137,6 +137,53 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* AI Emergency Briefing & Live Resource Availability Matrix */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full">
+        <div className="lg:col-span-2 p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/60 via-[#0F1626] to-cyan-950/60 border border-cyan-500/40 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black text-cyan-300 uppercase tracking-wider flex items-center space-x-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>AI EMERGENCY BRIEFING (AUTONOMOUS SUMMARY)</span>
+            </span>
+            <span className="text-[10px] font-mono text-emerald-400 font-bold flex items-center space-x-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>AI AGENT ORCHESTRATOR ONLINE</span>
+            </span>
+          </div>
+          <p className="text-xs text-slate-200 leading-relaxed font-medium">
+            {activeIncident
+              ? `🚨 Active Emergency: ${activeIncident.type} detected at ${activeIncident.location}. Severity: ${activeIncident.severity}. Security QRT (8 personnel) and Medical EMT (3 staff, 1 ALS ambulance) assigned. Safe green evacuation corridor calculated to Lara Gate. Role-based alerts active.`
+              : "✅ All campus sectors reporting normal telemetry. AI autonomous multi-agent graph (Security, Medical, Transport, Facilities, and Routing Agents) active with 100% readiness across all 15 Vignan University zones."}
+          </p>
+        </div>
+
+        {/* Resource Availability Matrix */}
+        <div className="p-3.5 rounded-2xl bg-[#0F1626] border border-[#1E2C48] space-y-2">
+          <span className="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
+            <Activity className="w-3.5 h-3.5 text-amber-400" />
+            <span>AVAILABLE HELP & RESOURCES</span>
+          </span>
+          <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+            <div className="p-1.5 rounded-lg bg-[#141D32] border border-[#1E2C48]">
+              <span className="text-[9px] text-slate-400 block">SECURITY GUARDS</span>
+              <strong className="text-sky-300">8 Available</strong>
+            </div>
+            <div className="p-1.5 rounded-lg bg-[#141D32] border border-[#1E2C48]">
+              <span className="text-[9px] text-slate-400 block">PARAMEDICS / EMT</span>
+              <strong className="text-rose-300">3 Available</strong>
+            </div>
+            <div className="p-1.5 rounded-lg bg-[#141D32] border border-[#1E2C48]">
+              <span className="text-[9px] text-slate-400 block">AMBULANCE</span>
+              <strong className="text-red-300">1 Available</strong>
+            </div>
+            <div className="p-1.5 rounded-lg bg-[#141D32] border border-[#1E2C48]">
+              <span className="text-[9px] text-slate-400 block">TRANSIT BUSES</span>
+              <strong className="text-emerald-300">2 Available</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Tabs & Search Bar */}
       <div className="w-full p-4 rounded-3xl bg-[#0F1626] border border-[#1E2C48] shadow-xl space-y-4 box-border">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 w-full">

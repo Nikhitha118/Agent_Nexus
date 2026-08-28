@@ -36,8 +36,8 @@ async function verifyAll() {
   console.log(`  Responder Routes Dispatched: ${fireSim.incident.responderRoutes.length}`);
 
   // 4. Dynamic Replanning
-  console.log("\n4. Testing Dynamic Re-Planning (Road Blockage E-07):");
-  const replan = agentOrchestrator.handleRoadBlockage("E-07");
+  console.log("\n4. Testing Dynamic Re-Planning (Road Blockage edge-central-h):");
+  const replan = agentOrchestrator.handleRoadBlockage("edge-central-h");
   console.log(`✓ Re-routing Result:`, replan.success ? "SUCCESS" : "FAILED");
   console.log(`  New Route Distance: ${replan.incident.evacuationRoute.totalDistanceMeters}m`);
   console.log(`  New Assembly Point: ${replan.incident.recommendedAssemblyPoint.name}`);

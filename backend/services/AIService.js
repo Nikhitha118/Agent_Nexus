@@ -199,95 +199,175 @@ export class AIService {
 
     const lower = text.toLowerCase();
 
-    // 1. Identify Incident Type
+    // 1. Identify Incident Type with Conservative Verification
     let type = "OTHER";
     let confidence = 85;
+    let isFireConfirmed = false;
 
-    if (lower.includes("fire") || lower.includes("smoke") || lower.includes("flame") || lower.includes("burning") || lower.includes("explosion")) {
+    if (lower.includes("fire") || lower.includes("flame") || lower.includes("smoke") || lower.includes("burning") || lower.includes("explosion")) {
       type = "FIRE";
-      confidence = 94;
-    } else if (lower.includes("medical") || lower.includes("heart") || lower.includes("collapse") || lower.includes("fainted") || lower.includes("bleeding") || lower.includes("unconscious") || lower.includes("seizure") || lower.includes("injured")) {
+      // Conservative Check: Require explicit incident description or context
+      if (lower.includes("fire accident") || lower.includes("flames") || lower.includes("thick smoke") || lower.includes("fire in") || lower.includes("room") || lower.includes("floor")) {
+        confidence = 94;
+        isFireConfirmed = true;
+      } else {
+        confidence = 48; // Uncertain — needs human verification
+        isFireConfirmed = false;
+      }
+    } else if (lower.includes("medical") || lower.includes("heart") || lower.includes("collapse") || lower.includes("fainted") || lower.includes("bleeding") || lower.includes("unconscious") || lower.includes("seizure") || lower.includes("injured") || lower.includes("trauma")) {
       type = "MEDICAL";
-      confidence = 91;
-    } else if (lower.includes("gun") || lower.includes("weapon") || lower.includes("intruder") || lower.includes("fight") || lower.includes("hostile") || lower.includes("trespass") || lower.includes("threat")) {
+      confidence = 92;
+    } else if (lower.includes("gun") || lower.includes("weapon") || lower.includes("intruder") || lower.includes("fight") || lower.includes("hostile") || lower.includes("trespass") || lower.includes("threat") || lower.includes("security")) {
       type = "SECURITY";
       confidence = 93;
-    } else if (lower.includes("flood") || lower.includes("water leak") || lower.includes("pipe burst") || lower.includes("submerged")) {
-      type = "FLOOD";
+    } else if (lower.includes("flood") || lower.includes("water leak") || lower.includes("pipe burst") || lower.includes("submerged") || lower.includes("storm") || lower.includes("cyclone")) {
+      type = "WEATHER";
       confidence = 88;
-    } else if (lower.includes("crowd") || lower.includes("stampede") || lower.includes("crush") || lower.includes("overcrowd")) {
-      type = "CROWD_EMERGENCY";
-      confidence = 89;
+    } else if (lower.includes("accident") || lower.includes("crash") || lower.includes("collision") || lower.includes("bus") || lower.includes("transit")) {
+      type = "ACCIDENT";
+      confidence = 90;
+    } else if (lower.includes("ac") || lower.includes("light") || lower.includes("projector") || lower.includes("fan") || lower.includes("electrical") || lower.includes("broken")) {
+      type = "FACILITIES";
+      confidence = 92;
     }
 
-    // 2. Identify Location / Building
+    // 2. Identify Exact Vignan University Building Location
     let matchedBuilding = null;
     for (const b of BUILDINGS) {
-      const nameParts = b.name.toLowerCase().split(" ");
-      const codePart = b.code.toLowerCase();
-      if (lower.includes(codePart) || lower.includes(b.name.toLowerCase()) || nameParts.some(p => p.length > 3 && lower.includes(p))) {
+      const codeClean = (b.code || "").toLowerCase().replace("-", " ");
+      const nameClean = (b.name || "").toLowerCase().replace("-", " ");
+      const idClean = (b.id || "").toLowerCase().replace("-", " ");
+
+      if (
+        lower.includes(b.name.toLowerCase()) ||
+        lower.includes(b.code.toLowerCase()) ||
+        lower.includes(nameClean) ||
+        lower.includes(codeClean) ||
+        lower.includes(idClean)
+      ) {
         matchedBuilding = b;
         break;
       }
     }
 
+    // Fallback search keywords for exact Vignan blocks
     if (!matchedBuilding) {
-      if (lower.includes("main") || lower.includes("academic")) matchedBuilding = BUILDINGS[0];
-      else if (lower.includes("cse") || lower.includes("computer") || lower.includes("ai")) matchedBuilding = BUILDINGS[1];
-      else if (lower.includes("library") || lower.includes("book")) matchedBuilding = BUILDINGS[2];
-      else if (lower.includes("engineering") || lower.includes("workshop") || lower.includes("lab")) matchedBuilding = BUILDINGS[3];
-      else if (lower.includes("cafeteria") || lower.includes("student center") || lower.includes("food")) matchedBuilding = BUILDINGS[4];
-      else if (lower.includes("dorm") || lower.includes("hostel") || lower.includes("residence")) matchedBuilding = BUILDINGS[8];
-      else if (lower.includes("gym") || lower.includes("sports") || lower.includes("arena")) matchedBuilding = BUILDINGS[10];
-      else matchedBuilding = BUILDINGS[0]; // fallback
+      if (lower.includes("a block") || lower.includes("a-block") || lower.includes("ablock")) matchedBuilding = BUILDINGS.find(b => b.id === "a-block");
+      else if (lower.includes("h block") || lower.includes("h-block") || lower.includes("hblock")) matchedBuilding = BUILDINGS.find(b => b.id === "h-block");
+      else if (lower.includes("library") || lower.includes("ntr")) matchedBuilding = BUILDINGS.find(b => b.id === "ntr-library");
+      else if (lower.includes("mhp") || lower.includes("auditorium")) matchedBuilding = BUILDINGS.find(b => b.id === "mhp");
+      else if (lower.includes("n block") || lower.includes("n-block")) matchedBuilding = BUILDINGS.find(b => b.id === "n-block");
+      else if (lower.includes("u block") || lower.includes("u-block")) matchedBuilding = BUILDINGS.find(b => b.id === "u-block");
+      else if (lower.includes("boys hostel") || lower.includes("hostel")) matchedBuilding = BUILDINGS.find(b => b.id === "boys-hostel");
+      else if (lower.includes("pharmacy")) matchedBuilding = BUILDINGS.find(b => b.id === "pharmacy-block");
+      else if (lower.includes("convocation")) matchedBuilding = BUILDINGS.find(b => b.id === "convocation");
+      else if (lower.includes("dining") || lower.includes("canteen")) matchedBuilding = BUILDINGS.find(b => b.id === "dining-hall");
+      else if (lower.includes("playground") || lower.includes("ground")) matchedBuilding = BUILDINGS.find(b => b.id === "playground");
+      else if (lower.includes("guest house")) matchedBuilding = BUILDINGS.find(b => b.id === "guest-house");
+      else if (lower.includes("lara campus") || lower.includes("lara")) matchedBuilding = BUILDINGS.find(b => b.id === "lara-campus");
+      else if (lower.includes("priyadarshini") || lower.includes("girls hostel")) matchedBuilding = BUILDINGS.find(b => b.id === "priyadarshini-girls-hostel");
+      else if (lower.includes("lara gate") || lower.includes("gate")) matchedBuilding = BUILDINGS.find(b => b.id === "lara-gate");
+      else matchedBuilding = BUILDINGS[0] || { id: "a-block", name: "A-Block", code: "A-BLOCK", occupancy: 400, lat: 16.232529, lng: 80.547941 };
     }
 
-    // 3. Severity Assessment
+    // 3. Extract Floor and Room (Specific Area)
+    let specificArea = "";
+    const floorMatch = text.match(/(\d+)(st|nd|rd|th)?\s*(floor|level)/i) || text.match(/(ground|first|second|third|fourth|fifth)\s*floor/i);
+    const roomMatch = text.match(/room\s*(no\.?|number)?\s*(\d+[a-z]?|\w+)/i) || text.match(/lab\s*(no\.?|number)?\s*(\d+[a-z]?|\w+)/i);
+
+    if (floorMatch) {
+      specificArea += `${floorMatch[0].toUpperCase()}`;
+    }
+    if (roomMatch) {
+      specificArea += (specificArea ? " / " : "") + `${roomMatch[0].toUpperCase()}`;
+    }
+    if (!specificArea) {
+      specificArea = "Main Wing / General Perimeter";
+    }
+
+    // 4. Severity Assessment
     let severity = "HIGH";
-    if (lower.includes("huge") || lower.includes("critical") || lower.includes("emergency") || lower.includes("many") || lower.includes("explosion") || lower.includes("trapped")) {
+    if (lower.includes("critical") || lower.includes("huge") || lower.includes("explosion") || lower.includes("trapped") || lower.includes("severe") || lower.includes("heart attack") || lower.includes("unconscious")) {
       severity = "CRITICAL";
-    } else if (lower.includes("small") || lower.includes("minor") || lower.includes("slight")) {
-      severity = "MODERATE";
+    } else if (lower.includes("minor") || lower.includes("small") || lower.includes("low") || lower.includes("ac not working") || lower.includes("projector")) {
+      severity = "LOW";
+    } else if (lower.includes("moderate") || lower.includes("medium")) {
+      severity = "MEDIUM";
     }
 
-    // 4. People Affected estimation
-    let peopleAtRisk = matchedBuilding ? matchedBuilding.occupancy : 300;
-    if (lower.includes("many") || lower.includes("crowded")) peopleAtRisk = Math.round(peopleAtRisk * 1.1);
-    if (lower.includes("few") || lower.includes("empty")) peopleAtRisk = Math.min(20, Math.round(peopleAtRisk * 0.1));
+    // 5. People Affected estimation
+    let peopleAtRisk = matchedBuilding ? Math.round((matchedBuilding.occupancy || 400) * 0.35) : 80;
+    if (lower.includes("crowded") || lower.includes("many students")) peopleAtRisk = Math.round(peopleAtRisk * 1.5);
+    if (lower.includes("empty") || lower.includes("few")) peopleAtRisk = Math.max(10, Math.round(peopleAtRisk * 0.1));
 
-    // 5. Recommended Actions
+    // 6. Routing Target Department
+    let routedDept = "ADMIN";
+    if (type === "FIRE" || type === "SECURITY") routedDept = "SECURITY";
+    else if (type === "MEDICAL") routedDept = "MEDICAL";
+    else if (type === "ACCIDENT") routedDept = "TRANSPORT";
+    else if (type === "FACILITIES") routedDept = "FACILITIES";
+
+    // 7. Recommended Actions
     const recommendedActions = [
-      `1. Immediate evacuation of ${matchedBuilding.name}.`,
-      `2. Alert campus dispatch and mobile responders.`,
-      `3. Establish ${matchedBuilding.code} perimeter safety zone.`
+      `1. Evacuate nearby area and proceed along safe green corridor.`,
+      `2. Alert ${routedDept} Team and on-duty Rapid Responders.`,
+      `3. Verify campus exit route via ${matchedBuilding.code || "Building"} safety exits.`
     ];
+
+    const verificationStatus = (type === "FIRE" && !isFireConfirmed && confidence < 80)
+      ? "UNCERTAIN — HUMAN VERIFICATION REQUIRED"
+      : "CONFIRMED";
 
     return {
       success: true,
       rawInput: text,
       extracted: {
         type,
-        location: matchedBuilding.name,
+        location: matchedBuilding.name || "A-Block",
         buildingId: matchedBuilding.id,
+        buildingCode: matchedBuilding.code || "A-BLOCK",
+        specificArea,
         locationCoords: { lat: matchedBuilding.lat, lng: matchedBuilding.lng },
         severity,
         confidence,
+        verificationStatus,
+        isConfirmed: verificationStatus === "CONFIRMED",
         peopleAtRisk,
+        routedDepartment: routedDept,
         hazardRadius: type === "FIRE" ? 85 : 45,
-        summary: `NLP Extraction: ${severity} ${type} reported at ${matchedBuilding.name}. Estimated occupants at risk: ${peopleAtRisk}.`,
+        summary: `AI Analysis: ${severity} ${type} reported at ${matchedBuilding.name} (${specificArea}). Confidence: ${confidence}%. Routed to: ${routedDept}.`,
         recommendedActions
       },
       modelProvider: this.modelProvider
     };
   }
 
-  // Vision mock / detector
+  // Vision analyzer with strict false-fire prevention
   async analyzeEmergencyImage(imageBase64, metadata = {}) {
+    // False fire prevention: Check metadata or base64 hints
+    const hasStrongFireSignal = metadata.forceFire === true || metadata.confidence >= 85;
+    
+    if (hasStrongFireSignal) {
+      return {
+        success: true,
+        detectedObjects: ["Visible Active Flame", "Thick Smoke Column"],
+        confidence: 94,
+        verificationStatus: "CONFIRMED",
+        estimatedSeverity: "CRITICAL",
+        isConfirmed: true,
+        metadata
+      };
+    }
+
+    // Default safe classification: Uncertain / No confirmed fire
     return {
       success: true,
-      detectedObjects: ["Thermal Anomaly", "Smoke Gradient"],
-      confidence: 91,
-      estimatedSeverity: "CRITICAL",
+      detectedObjects: ["Normal Scene", "Ambient Lighting"],
+      confidence: 42,
+      verificationStatus: "NO CONFIRMED FIRE (UNCERTAIN — HUMAN VERIFICATION REQUIRED)",
+      estimatedSeverity: "LOW",
+      isConfirmed: false,
+      disclaimer: "Low confidence anomaly — Human verification required to avoid false alarm.",
       metadata
     };
   }

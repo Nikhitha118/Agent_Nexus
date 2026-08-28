@@ -23,7 +23,25 @@ router.post("/login", (req, res) => {
   }
 
   // Step 1: Check whether the account exists in persistent storage
-  const account = userStorageService.findAccount(loginId);
+  let account = userStorageService.findAccount(loginId);
+
+  // Student Instant Verification (Hackathon Demo: Student University ID = Default Password)
+  if (!account && role && role.toUpperCase() === "STUDENT" && loginId && password === loginId) {
+    account = {
+      id: `U-STU-${loginId.toUpperCase()}`,
+      email: `${loginId.toLowerCase()}@vignan.edu`,
+      username: loginId.toLowerCase(),
+      password: password,
+      role: "STUDENT",
+      name: `Student (${loginId.toUpperCase()})`,
+      title: "B.Tech Student",
+      badge: "Student Civilian",
+      avatar: "🎓",
+      createdAt: new Date().toISOString()
+    };
+    userStorageService.saveAccount(account);
+  }
+
   if (!account) {
     return res.status(401).json({
       success: false,

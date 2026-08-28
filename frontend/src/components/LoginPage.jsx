@@ -88,7 +88,7 @@ export const ROLE_DEFINITIONS = [
 ];
 
 export const LoginPage = () => {
-  const { validateAndLogin, registerAccount } = useSentinel();
+  const { validateAndLogin, registerAccount, openEmergencyAiModal, activeIncident } = useSentinel();
 
   // State: selectedRole is null on role selection screen, object when role chosen
   const [selectedRole, setSelectedRole] = useState(null);
@@ -133,7 +133,7 @@ export const LoginPage = () => {
     setSuccessMsg("");
 
     if (!loginId.trim() || !password) {
-      setErrorMsg("Please enter your University ID / Username and Password.");
+      setErrorMsg("Please enter your University ID and Password.");
       return;
     }
 
@@ -186,7 +186,7 @@ export const LoginPage = () => {
       // Switch back to Login view and pre-fill username
       setSuccessMsg("Registration successful! Please login with your registered credentials.");
       setLoginId(regUsername.trim());
-      setPassword("");
+      setPassword(regUsername.trim());
       setShowLoginPassword(false);
       setAuthMode("LOGIN");
       setRegName("");
@@ -198,7 +198,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#080B13] text-slate-100 flex flex-col justify-between selection:bg-red-500/30 overflow-x-hidden">
+    <div className="relative min-h-screen lg:h-screen lg:max-h-screen w-full bg-[#080B13] text-slate-100 flex flex-col justify-center items-center py-3 sm:py-4 px-4 sm:px-6 lg:px-8 selection:bg-red-500/30 overflow-x-hidden lg:overflow-hidden box-border">
       
       {/* LAYER 1: Full-Screen Cinematic Vignan University Campus Video Background */}
       <div className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
@@ -220,376 +220,370 @@ export const LoginPage = () => {
       <div className="fixed bottom-0 right-1/4 w-80 h-80 bg-blue-600/8 rounded-full blur-3xl pointer-events-none z-[2]" />
 
       {/* LAYER 4: Application Interface Content */}
-      <div className="relative z-10 flex flex-col justify-between min-h-screen">
+      <div className="relative z-10 w-full max-w-4xl lg:max-w-[880px] mx-auto flex flex-col items-center justify-center my-auto space-y-2 sm:space-y-2.5">
         
-        {/* Top Emergency System Gateway Bar */}
-        <header className="bg-[#0B101D]/80 backdrop-blur-md border-b border-[#1E2C48] px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block animate-pulse"></span>
-            <span className="font-mono font-semibold text-slate-300">CAMPUS EMERGENCY DISPATCH GATEWAY</span>
+        {/* Main Brand & AI Agent Header Section */}
+        <div className="text-center space-y-0.5 sm:space-y-1 shrink-0">
+          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-blue-950/80 border border-blue-800 text-cyan-400 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider shadow-md shadow-cyan-500/10 backdrop-blur-sm">
+            <Sparkles className="w-3 h-3" />
+            <span>VIGNAN UNIVERSITY • EMERGENCY RESPONSE DIGITAL TWIN</span>
           </div>
-          <div className="flex items-center space-x-3 font-mono text-[10px] text-cyan-400/80">
-            <span>VIGNAN UNIVERSITY</span>
-            <span className="text-slate-600">•</span>
-            <span>SYSTEM ONLINE</span>
+
+          <div className="flex items-center justify-center space-x-2 pt-0.5">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-gradient-to-br from-red-600 via-amber-600 to-rose-700 flex items-center justify-center shadow-md shadow-red-500/25 border border-red-400/30 shrink-0">
+              <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+            </div>
+            <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-none">
+              CAMPUS SENTINEL
+            </h1>
           </div>
-        </header>
 
-        {/* Main Center Content Container */}
-        <main className="flex-1 flex flex-col items-center justify-center px-4 py-3 sm:py-4 my-auto w-full">
-          <div className="w-full max-w-5xl space-y-3 sm:space-y-4">
-            
-            {/* Top Brand Header (Compact & Proportional) */}
-            <div className="text-center space-y-1 sm:space-y-1.5">
-              <div className="inline-flex items-center space-x-2 px-3 py-0.5 rounded-full bg-blue-950/70 border border-blue-800/80 text-cyan-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-md shadow-cyan-500/10 backdrop-blur-sm">
-                <Sparkles className="w-3 h-3" />
-                <span>VIGNAN UNIVERSITY • EMERGENCY RESPONSE DIGITAL TWIN</span>
-              </div>
+          <p className="text-[10.5px] sm:text-xs font-semibold text-cyan-400 leading-tight">
+            Autonomous Multi-Agent Campus Emergency Response System
+          </p>
+        </div>
 
-              <div className="flex items-center justify-center space-x-2.5">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-red-600 via-amber-600 to-rose-700 flex items-center justify-center shadow-lg shadow-red-500/20 border border-red-400/30 shrink-0">
-                  <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
-                  CAMPUS SENTINEL
-                </h1>
-              </div>
-
-              <p className="text-xs sm:text-sm font-semibold text-cyan-400 leading-tight">
-                Autonomous Multi-Agent Campus Emergency Response System
+        {/* VIEW 1: ROLE SELECTION SCREEN (3-Column Desktop Grid with Zero Scroll) */}
+        {!selectedRole && (
+          <div className="w-full space-y-2">
+            <div className="text-center">
+              <p className="text-[10px] sm:text-[10.5px] text-slate-300 font-medium bg-[#0A1120]/75 backdrop-blur-md inline-block px-3 py-0.5 rounded-full border border-[#1E2C48]">
+                Select your department access portal to authenticate into the emergency command system
               </p>
             </div>
 
-            {/* VIEW 1: ROLE SELECTION SCREEN (2x3 Compact Grid - Fits 100vh Desktop Without Scrolling) */}
-            {!selectedRole && (
-              <div className="space-y-2.5 sm:space-y-3">
-                <div className="text-center">
-                  <p className="text-[11px] sm:text-xs text-slate-300 font-medium bg-[#0A1120]/60 backdrop-blur-md inline-block px-3 py-0.5 rounded-full border border-[#1E2C48]/60">
-                    Select your department access portal to authenticate into the emergency command system
-                  </p>
-                </div>
-
-                {/* 6 Role Cards Grid: 3 columns x 2 rows (Compact medium size) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 lg:gap-3.5">
-                  {ROLE_DEFINITIONS.map((roleDef) => {
-                    const Icon = roleDef.icon;
-                    return (
-                      <div
-                        key={roleDef.role}
-                        onClick={() => handleSelectRole(roleDef)}
-                        className={`p-3.5 sm:p-4 rounded-2xl bg-[#0F1626]/88 backdrop-blur-xl border ${roleDef.border} shadow-xl hover:shadow-cyan-500/10 transition-all cursor-pointer flex flex-col justify-between space-y-2.5 group`}
-                      >
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br ${roleDef.color} flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform`}>
-                              <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                            </div>
-                            <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${roleDef.badgeColor}`}>
-                              {roleDef.role}
-                            </span>
-                          </div>
-
-                          <div>
-                            <h3 className="text-sm sm:text-base font-black text-white tracking-tight leading-tight group-hover:text-cyan-300 transition-colors">
-                              {roleDef.title}
-                            </h3>
-                            <p className="text-[11px] text-slate-300 leading-snug line-clamp-2 mt-0.5">
-                              {roleDef.description}
-                            </p>
-                          </div>
+            {/* 6 Role Cards Grid: 3 columns x 2 rows with strictly equal dimensions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 w-full auto-rows-fr">
+              {ROLE_DEFINITIONS.map((roleDef) => {
+                const Icon = roleDef.icon;
+                return (
+                  <div
+                    key={roleDef.role}
+                    onClick={() => handleSelectRole(roleDef)}
+                    className={`p-3 rounded-xl bg-[#0F1626]/90 backdrop-blur-xl border ${roleDef.border} shadow-lg hover:shadow-cyan-500/10 transition-all cursor-pointer flex flex-col justify-between h-full group select-none`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${roleDef.color} flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0`}>
+                          <Icon className="w-3.5 h-3.5" />
                         </div>
+                        <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${roleDef.badgeColor}`}>
+                          {roleDef.role}
+                        </span>
+                      </div>
 
+                      <div className="space-y-0.5">
+                        <h3 className="text-xs sm:text-[13px] font-black text-white tracking-tight leading-tight group-hover:text-cyan-300 transition-colors truncate">
+                          {roleDef.title}
+                        </h3>
+                        <p className="text-[10px] sm:text-[10.5px] text-slate-300 leading-snug line-clamp-2 h-7 sm:h-7.5 overflow-hidden">
+                          {roleDef.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={`w-full h-8 sm:h-8.5 mt-2 px-2.5 rounded-lg bg-gradient-to-r ${roleDef.color} hover:brightness-110 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow transition-all active:scale-95 border border-white/20 shrink-0`}
+                    >
+                      <span className="truncate">{roleDef.buttonText}</span>
+                      <ArrowRight className="w-3 h-3 shrink-0" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 2: SECURE ACCESS / LOGIN MODAL (Centered, Compact, Zero Cutoff) */}
+        {selectedRole && (
+          <div className="max-w-xs sm:max-w-sm w-full mx-auto space-y-1.5 animate-fade-in">
+            {/* Back button */}
+            <button
+              onClick={() => { setSelectedRole(null); setErrorMsg(""); setSuccessMsg(""); }}
+              className="inline-flex items-center space-x-1.5 text-[10.5px] font-bold text-slate-300 hover:text-cyan-400 transition-colors bg-[#0A1120]/80 px-2.5 py-0.5 rounded-lg border border-[#1E2C48] backdrop-blur-md"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              <span>Back to Role Selection</span>
+            </button>
+
+            {/* Authentication Glass Card */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0F1626]/95 border border-[#1E2C48] backdrop-blur-2xl shadow-2xl space-y-2.5 relative overflow-hidden">
+              {/* Ambient Glow */}
+              <div className="absolute top-0 right-0 w-28 h-28 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-28 h-28 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+              {/* Selected Role Header */}
+              <div className="space-y-0.5 text-center pb-1.5 border-b border-[#1E2C48]">
+                <div className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-md bg-[#141D32] border border-[#1E2C48]">
+                  <selectedRole.icon className="w-3 h-3 text-cyan-400" />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+                    Role: <span className="text-cyan-400">{selectedRole.title}</span>
+                  </span>
+                </div>
+                <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider leading-tight">
+                  Secure Access Portal
+                </h2>
+                <p className="text-[9.5px] text-slate-400 font-mono">
+                  {authMode === "LOGIN"
+                    ? (selectedRole.role === "STUDENT"
+                        ? "Enter your University ID to log in"
+                        : `Enter your ${selectedRole.title} credentials`)
+                    : "Create departmental access account"}
+                </p>
+              </div>
+
+              {/* Auth Mode Toggle Tabs */}
+              <div className="grid grid-cols-2 p-0.5 rounded-lg bg-[#141D32] border border-[#1E2C48] text-[10.5px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("LOGIN"); setErrorMsg(""); }}
+                  className={`py-1 rounded-md transition-all ${
+                    authMode === "LOGIN"
+                      ? "bg-blue-600 text-white shadow"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  LOGIN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("REGISTER"); setErrorMsg(""); }}
+                  className={`py-1 rounded-md transition-all ${
+                    authMode === "REGISTER"
+                      ? "bg-blue-600 text-white shadow"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  REGISTER
+                </button>
+              </div>
+
+              {/* Success Alert */}
+              {successMsg && (
+                <div className="p-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 text-[10.5px] flex items-center space-x-1.5 animate-fade-in">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                  <span>{successMsg}</span>
+                </div>
+              )}
+
+              {/* Error Alert */}
+              {errorMsg && (
+                <div className="p-1.5 rounded-lg bg-red-950/80 border border-red-500/60 text-red-300 text-[10.5px] flex items-center space-x-1.5 animate-shake">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-400" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+              {/* LOGIN FORM WITH ROLE-SPECIFIC LABELS AND STUDENT PASSWORD AUTO-FILL */}
+              {authMode === "LOGIN" && (
+                <form onSubmit={handleLoginSubmit} className="space-y-2">
+                  <div className="space-y-0.5">
+                    <label className="text-[10.5px] font-bold text-slate-300 flex items-center space-x-1">
+                      <User className="w-3 h-3 text-cyan-400" />
+                      <span>
+                        {selectedRole.role === "STUDENT"
+                          ? "University ID"
+                          : "Username / ID"}
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      autoFocus
+                      placeholder={
+                        selectedRole.role === "STUDENT"
+                          ? "e.g. 241FA04633"
+                          : `e.g. ${selectedRole.role.toLowerCase()}`
+                      }
+                      value={loginId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (selectedRole.role === "STUDENT") {
+                          const upperVal = val.toUpperCase();
+                          setLoginId(upperVal);
+                          setPassword(upperVal); // Student: default password is University ID
+                        } else {
+                          setLoginId(val);
+                        }
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all uppercase tracking-wider"
+                    />
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <label className="text-[10.5px] font-bold text-slate-300 flex items-center justify-between">
+                      <span className="flex items-center space-x-1">
+                        <Lock className="w-3 h-3 text-amber-400" />
+                        <span>Password</span>
+                      </span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showLoginPassword ? "text" : "password"}
+                        required
+                        placeholder={
+                          selectedRole.role === "STUDENT"
+                            ? "Same as University ID"
+                            : "Enter password"
+                        }
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-2.5 pr-7 py-1.5 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-cyan-400 focus:outline-none focus:text-cyan-400 transition-colors"
+                      >
+                        {showLoginPassword ? (
+                          <EyeOff className="w-3 h-3 text-cyan-400" />
+                        ) : (
+                          <Eye className="w-3 h-3 text-slate-400" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-[9px] text-cyan-400 font-mono italic">
+                      {selectedRole.role === "STUDENT"
+                        ? "* Default password is your University ID"
+                        : `* Default demo password: ${selectedRole.role.toLowerCase()}123`}
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full h-8 sm:h-8.5 rounded-xl bg-gradient-to-r ${selectedRole.color} hover:brightness-110 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-1.5 border border-white/20`}
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>{isLoading ? "AUTHENTICATING..." : "SECURE LOGIN"}</span>
+                  </button>
+                </form>
+              )}
+
+              {/* REGISTER FORM WITH COMPACT 2-COLUMN LAYOUT */}
+              {authMode === "REGISTER" && (
+                <form onSubmit={handleRegisterSubmit} className="space-y-1.5">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] font-bold text-slate-300 flex items-center space-x-1">
+                        <User className="w-3 h-3 text-cyan-400" />
+                        <span>Name</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Full Name"
+                        value={regName}
+                        onChange={(e) => setRegName(e.target.value)}
+                        className="w-full px-2 py-1 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] font-bold text-slate-300 flex items-center space-x-1">
+                        <Building className="w-3 h-3 text-purple-400" />
+                        <span>Branch</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CSE"
+                        value={regDepartment}
+                        onChange={(e) => setRegDepartment(e.target.value)}
+                        className="w-full px-2 py-1 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <label className="text-[10px] font-bold text-slate-300 flex items-center space-x-1">
+                      <User className="w-3 h-3 text-blue-400" />
+                      <span>{selectedRole.role === "STUDENT" ? "University ID" : "Username / ID"}</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={selectedRole.role === "STUDENT" ? "e.g. 241FA04633" : "Official Username"}
+                      value={regUsername}
+                      onChange={(e) => setRegUsername(e.target.value.toUpperCase())}
+                      className="w-full px-2 py-1 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all uppercase tracking-wider"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] font-bold text-slate-300 flex items-center space-x-1">
+                        <Lock className="w-3 h-3 text-amber-400" />
+                        <span>Password</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showRegPassword ? "text" : "password"}
+                          required
+                          placeholder="Password"
+                          value={regPassword}
+                          onChange={(e) => setRegPassword(e.target.value)}
+                          className="w-full pl-2 pr-6 py-1 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
+                        />
                         <button
                           type="button"
-                          className={`w-full py-1.5 sm:py-2 px-3 rounded-xl bg-gradient-to-r ${roleDef.color} hover:brightness-110 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow transition-all active:scale-95 border border-white/20`}
+                          onClick={() => setShowRegPassword(!showRegPassword)}
+                          aria-label={showRegPassword ? "Hide password" : "Show password"}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-cyan-400 focus:outline-none"
                         >
-                          <span>{roleDef.buttonText}</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          {showRegPassword ? <EyeOff className="w-3 h-3 text-cyan-400" /> : <Eye className="w-3 h-3 text-slate-400" />}
                         </button>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] font-bold text-slate-300 flex items-center space-x-1">
+                        <Lock className="w-3 h-3 text-amber-400" />
+                        <span>Confirm</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showRegConfirmPassword ? "text" : "password"}
+                          required
+                          placeholder="Confirm"
+                          value={regConfirmPassword}
+                          onChange={(e) => setRegConfirmPassword(e.target.value)}
+                          className="w-full pl-2 pr-6 py-1 rounded-lg bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                          aria-label={showRegConfirmPassword ? "Hide password" : "Show password"}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-cyan-400 focus:outline-none"
+                        >
+                          {showRegConfirmPassword ? <EyeOff className="w-3 h-3 text-cyan-400" /> : <Eye className="w-3 h-3 text-slate-400" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full h-8 sm:h-8.5 mt-1 rounded-xl bg-gradient-to-r ${selectedRole.color} hover:brightness-110 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-1.5 border border-white/20`}
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>{isLoading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}</span>
+                  </button>
+                </form>
+              )}
+
+              <div className="pt-1 text-center border-t border-[#1E2C48]">
+                <p className="text-[8px] font-mono text-slate-400 uppercase tracking-wider">
+                  Emergency Operations • Authorized Personnel Only
+                </p>
               </div>
-            )}
-
-            {/* VIEW 2: LOGIN / REGISTER AUTHENTICATION PAGE (With Password Eye Visibility Toggle) */}
-            {selectedRole && (
-              <div className="max-w-md mx-auto space-y-3 sm:space-y-4 animate-fade-in">
-                {/* Back button */}
-                <button
-                  onClick={() => { setSelectedRole(null); setErrorMsg(""); setSuccessMsg(""); }}
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-300 hover:text-cyan-400 transition-colors bg-[#0A1120]/70 px-3 py-1.5 rounded-xl border border-[#1E2C48] backdrop-blur-md"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Role Selection</span>
-                </button>
-
-                {/* Authentication Glass Card */}
-                <div className="p-5 sm:p-6 rounded-3xl bg-[#0F1626]/90 border border-[#1E2C48] backdrop-blur-2xl shadow-2xl space-y-4 relative overflow-hidden">
-                  {/* Ambient Glow */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                  {/* Selected Role Header */}
-                  <div className="space-y-1.5 text-center pb-2.5 border-b border-[#1E2C48]">
-                    <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-xl bg-[#141D32] border border-[#1E2C48]">
-                      <selectedRole.icon className="w-3.5 h-3.5 text-cyan-400" />
-                      <span className="text-[11px] font-bold text-white uppercase tracking-wider">
-                        Selected Role: <span className="text-cyan-400">{selectedRole.title}</span>
-                      </span>
-                    </div>
-                    <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider">
-                      Secure Access Portal
-                    </h2>
-                    <p className="text-[10px] text-slate-400 font-mono">
-                      {authMode === "LOGIN"
-                        ? "Enter your authorized credentials to enter dashboard"
-                        : "Create your departmental access account"}
-                    </p>
-                  </div>
-
-                  {/* Auth Mode Toggle Tabs */}
-                  <div className="grid grid-cols-2 p-1 rounded-xl bg-[#141D32] border border-[#1E2C48] text-xs font-bold">
-                    <button
-                      type="button"
-                      onClick={() => { setAuthMode("LOGIN"); setErrorMsg(""); }}
-                      className={`py-1.5 rounded-lg transition-all ${
-                        authMode === "LOGIN"
-                          ? "bg-blue-600 text-white shadow"
-                          : "text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      LOGIN
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setAuthMode("REGISTER"); setErrorMsg(""); }}
-                      className={`py-1.5 rounded-lg transition-all ${
-                        authMode === "REGISTER"
-                          ? "bg-blue-600 text-white shadow"
-                          : "text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      REGISTER
-                    </button>
-                  </div>
-
-                  {/* Success Alert */}
-                  {successMsg && (
-                    <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 text-xs flex items-center space-x-2 animate-fade-in">
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                      <span>{successMsg}</span>
-                    </div>
-                  )}
-
-                  {/* Error Alert */}
-                  {errorMsg && (
-                    <div className="p-2.5 rounded-xl bg-red-950/80 border border-red-500/60 text-red-300 text-xs flex items-center space-x-2 animate-shake">
-                      <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
-                      <span>{errorMsg}</span>
-                    </div>
-                  )}
-
-                  {/* LOGIN FORM WITH PASSWORD EYE TOGGLE */}
-                  {authMode === "LOGIN" && (
-                    <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
-                          <User className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>University ID / Username</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          autoFocus
-                          placeholder="Enter your university ID or username"
-                          value={loginId}
-                          onChange={(e) => setLoginId(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
-                          <span className="flex items-center space-x-1.5">
-                            <Lock className="w-3.5 h-3.5 text-amber-400" />
-                            <span>Password</span>
-                          </span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showLoginPassword ? "text" : "password"}
-                            required
-                            placeholder="Enter your access password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowLoginPassword(!showLoginPassword)}
-                            aria-label={showLoginPassword ? "Hide password" : "Show password"}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-cyan-400 focus:outline-none focus:text-cyan-400 transition-colors"
-                          >
-                            {showLoginPassword ? (
-                              <EyeOff className="w-4 h-4 text-cyan-400" />
-                            ) : (
-                              <Eye className="w-4 h-4 text-slate-400" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r ${selectedRole.color} hover:brightness-110 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-2 border border-white/20`}
-                      >
-                        <KeyRound className="w-4 h-4" />
-                        <span>{isLoading ? "AUTHENTICATING..." : "SECURE LOGIN"}</span>
-                      </button>
-                    </form>
-                  )}
-
-                  {/* REGISTER FORM WITH PASSWORD EYE TOGGLES */}
-                  {authMode === "REGISTER" && (
-                    <form onSubmit={handleRegisterSubmit} className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
-                          <User className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>Full Name</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. Rahul Verma or Dr. Sharma"
-                          value={regName}
-                          onChange={(e) => setRegName(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
-                          <Building className="w-3.5 h-3.5 text-purple-400" />
-                          <span>Department / Registration No.</span>
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Computer Science / 211FA04001"
-                          value={regDepartment}
-                          onChange={(e) => setRegDepartment(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
-                          <User className="w-3.5 h-3.5 text-blue-400" />
-                          <span>University ID / Username</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Choose username or ID"
-                          value={regUsername}
-                          onChange={(e) => setRegUsername(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-300 flex items-center justify-between">
-                            <span className="flex items-center space-x-1">
-                              <Lock className="w-3 h-3 text-amber-400" />
-                              <span>Password</span>
-                            </span>
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showRegPassword ? "text" : "password"}
-                              required
-                              placeholder="Password"
-                              value={regPassword}
-                              onChange={(e) => setRegPassword(e.target.value)}
-                              className="w-full pl-2.5 pr-8 py-2 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowRegPassword(!showRegPassword)}
-                              aria-label={showRegPassword ? "Hide password" : "Show password"}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-cyan-400 focus:outline-none focus:text-cyan-400 transition-colors"
-                            >
-                              {showRegPassword ? (
-                                <EyeOff className="w-3.5 h-3.5 text-cyan-400" />
-                              ) : (
-                                <Eye className="w-3.5 h-3.5 text-slate-400" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-300 flex items-center justify-between">
-                            <span className="flex items-center space-x-1">
-                              <Lock className="w-3 h-3 text-amber-400" />
-                              <span>Confirm</span>
-                            </span>
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showRegConfirmPassword ? "text" : "password"}
-                              required
-                              placeholder="Confirm"
-                              value={regConfirmPassword}
-                              onChange={(e) => setRegConfirmPassword(e.target.value)}
-                              className="w-full pl-2.5 pr-8 py-2 rounded-xl bg-[#141D32] border border-[#1E2C48] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono transition-all"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                              aria-label={showRegConfirmPassword ? "Hide password" : "Show password"}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-cyan-400 focus:outline-none focus:text-cyan-400 transition-colors"
-                            >
-                              {showRegConfirmPassword ? (
-                                <EyeOff className="w-3.5 h-3.5 text-cyan-400" />
-                              ) : (
-                                <Eye className="w-3.5 h-3.5 text-slate-400" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r ${selectedRole.color} hover:brightness-110 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-2 border border-white/20`}
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        <span>{isLoading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT & ENTER"}</span>
-                      </button>
-                    </form>
-                  )}
-
-                  <div className="pt-1.5 text-center border-t border-[#1E2C48]">
-                    <p className="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                      Emergency Operations • Authorized Personnel Only
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            </div>
           </div>
-        </main>
+        )}
 
-        {/* Footer */}
-        <footer className="border-t border-[#1E2C48] bg-[#0B101D]/80 backdrop-blur-md px-4 py-1.5 text-center text-[10px] sm:text-xs text-slate-400 font-mono shrink-0">
-          <p>Campus Sentinel • Department of Campus Safety & Emergency Preparedness • Vignan University</p>
-        </footer>
       </div>
     </div>
   );

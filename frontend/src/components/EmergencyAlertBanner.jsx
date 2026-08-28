@@ -67,8 +67,8 @@ export const EmergencyAlertBanner = () => {
         };
       case "STUDENT":
         return {
-          title: "STUDENT CIVILIAN DIRECTIVE",
-          action: "Follow official emergency route on map, do not use elevators, and move directly to Assembly Point B (Central Quad).",
+          title: "CIVILIAN EVACUATION DIRECTIVE",
+          action: "Evacuate via North Stairwell ➔ Proceed directly to Assembly Point B (Central Quad). Do not use elevators.",
           icon: Navigation,
           color: "text-blue-300"
         };
@@ -87,76 +87,81 @@ export const EmergencyAlertBanner = () => {
   const DirectiveIcon = directive.icon;
 
   return (
-    <div className="bg-gradient-to-r from-red-950 via-[#1A0B12] to-red-950 border-b-2 border-red-500 shadow-2xl text-white px-4 py-3 sticky top-16 z-30 animate-pulse-glow">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        {/* Left: Critical Alert Badge & Event Info */}
-        <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-red-600 border border-red-400/50 flex items-center justify-center text-white shrink-0 shadow-lg shadow-red-600/40 animate-bounce">
-            <Flame className="w-6 h-6" />
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#0F1626]/95 backdrop-blur-md border-t border-red-600/50 shadow-2xl shadow-red-950/80 text-white px-4 py-2.5 animate-pulse-glow">
+      <div className="max-w-[1700px] mx-auto flex items-center justify-between gap-3 text-xs">
+        
+        {/* 1. Left: Pulsing Flame Icon & Alert Source Timestamp */}
+        <div className="flex items-center space-x-3 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-rose-700 border border-red-400/50 flex items-center justify-center text-white shrink-0 shadow-lg shadow-red-600/40 relative">
+            <span className="absolute w-full h-full rounded-xl bg-red-500 opacity-50 animate-ping" />
+            <Flame className="w-5 h-5 relative z-10 animate-bounce" />
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-red-600 text-white shadow font-mono">
-                🚨 CRITICAL CAMPUS ALERT
+
+          <div className="space-y-0.5">
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-red-600 text-white shadow">
+                🚨 CRITICAL ALERT
               </span>
-              <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">
-                Source: Emergency AI
+              <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800 font-bold">
+                Emergency AI
               </span>
-              <span className="text-[11px] font-mono text-red-400 bg-red-900/60 px-2 py-0.5 rounded border border-red-700 font-bold">
-                STATUS: ACTIVE
-              </span>
-              <span className="text-[11px] font-mono text-slate-300 flex items-center space-x-1">
+              <span className="text-[10px] font-mono text-slate-300 flex items-center space-x-1">
                 <Clock className="w-3 h-3 text-slate-400" />
                 <span>{timestamp}</span>
               </span>
             </div>
-
-            <div className="mt-1 flex items-center space-x-2 text-sm font-black text-white">
-              <span className="text-red-400">{incidentType} DETECTED:</span>
-              <span>{location}</span>
-            </div>
+            <p className="font-black text-white text-xs tracking-tight truncate max-w-[220px] sm:max-w-xs">
+              <span className="text-red-400">{incidentType}:</span> {location}
+            </p>
           </div>
         </div>
 
-        {/* Center: Role-Specific Action Instructions */}
-        <div className="bg-[#141D32]/90 border border-[#1E2C48] rounded-xl px-3 py-2 flex-1 max-w-xl">
-          <div className="flex items-center space-x-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400">
-            <DirectiveIcon className="w-3.5 h-3.5" />
-            <span>{directive.title}</span>
+        {/* 2. Center: Role-Based Sensitive Directive */}
+        <div className="hidden md:flex items-center space-x-2 bg-[#141D32]/90 border border-[#1E2C48] rounded-xl px-3 py-1.5 flex-1 max-w-2xl overflow-hidden">
+          <DirectiveIcon className="w-4 h-4 text-cyan-400 shrink-0" />
+          <div className="truncate">
+            <span className="text-[10px] font-mono font-bold uppercase text-cyan-400 mr-2">
+              [{directive.title}]
+            </span>
+            <span className="text-xs font-medium text-slate-100 truncate">
+              {currentRole === "STUDENT"
+                ? "Please move calmly along designated green evacuation route to Lara Gate."
+                : directive.action}
+            </span>
           </div>
-          <p className="text-xs font-semibold text-slate-100 mt-0.5 leading-snug">
-            {directive.action}
-          </p>
         </div>
 
-        {/* Right: Quick Action Buttons */}
-        <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
+        {/* 3. Right: CTA Buttons */}
+        <div className="flex items-center space-x-2 shrink-0">
           <button
             onClick={() => setActiveTab("MAP")}
-            className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-blue-600/30 transition-all active:scale-95"
+            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-blue-600/30 transition-all active:scale-95 whitespace-nowrap"
           >
             <Navigation className="w-3.5 h-3.5" />
-            <span>VIEW MAP ROUTE</span>
+            <span>{currentRole === "STUDENT" ? "VIEW SAFE ROUTE" : "VIEW MAP ROUTE"}</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab("EMERGENCY_AI")}
-            className="px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg transition-all active:scale-95 border border-cyan-400/40"
-          >
-            <Bot className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">EMERGENCY AI HUB</span>
-          </button>
+          {currentRole !== "STUDENT" && (
+            <button
+              onClick={() => setActiveTab("EMERGENCY_AI")}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg transition-all active:scale-95 border border-cyan-400/40 whitespace-nowrap"
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span>EMERGENCY AI HUB</span>
+            </button>
+          )}
 
           {(currentRole === "ADMIN" || currentRole === "SECURITY") && (
             <button
               onClick={() => openResolveModal(activeIncident)}
-              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 border border-emerald-400/40"
+              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 border border-emerald-400/40 whitespace-nowrap"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>RESOLVE</span>
+              <span>APPROVE / RESOLVE</span>
             </button>
           )}
         </div>
+
       </div>
     </div>
   );

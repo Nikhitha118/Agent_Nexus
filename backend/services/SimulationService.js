@@ -14,14 +14,14 @@ export class SimulationService {
       case "FIRE_DEMO":
         return await agentOrchestrator.executeEmergencyWorkflow({
           type: "FIRE",
-          title: "Fire Emergency - Main Academic Block",
-          location: "Main Academic Block",
-          buildingId: "B-01",
-          locationCoords: { lat: 37.7772, lng: -122.4182 },
+          title: "Fire Emergency - A-Block (Main Academic)",
+          location: "A-Block",
+          buildingId: "a-block",
+          locationCoords: { lat: 16.232529, lng: 80.547941 },
           hazardRadius: 85,
           severity: "CRITICAL",
           confidence: 94,
-          detectedBy: "CAM-02 (2nd Floor Corridor)",
+          detectedBy: "CAM-02 (A-Block Floor 2)",
           cameraId: "CAM-02",
           peopleAtRisk: 620
         }, { fastDemo, stepDelayMs: options.stepDelayMs || 350 });
@@ -29,30 +29,30 @@ export class SimulationService {
       case "MEDICAL":
         return await agentOrchestrator.executeEmergencyWorkflow({
           type: "MEDICAL",
-          title: "Medical Emergency - Student Activity Center",
-          location: "Student Activity Center",
-          buildingId: "B-05",
-          locationCoords: { lat: 37.7754, lng: -122.4173 },
+          title: "Medical Emergency - MHP Auditorium",
+          location: "MHP",
+          buildingId: "mhp",
+          locationCoords: { lat: 16.231920, lng: 80.548350 },
           hazardRadius: 40,
           severity: "HIGH",
           confidence: 91,
-          detectedBy: "CAM-05 (Recreation Pavilion)",
-          cameraId: "CAM-05",
-          peopleAtRisk: 40
+          detectedBy: "CAM-07 (MHP Cultural Complex)",
+          cameraId: "CAM-07",
+          peopleAtRisk: 45
         }, { fastDemo, stepDelayMs: options.stepDelayMs || 350 });
 
       case "SECURITY":
         return await agentOrchestrator.executeEmergencyWorkflow({
           type: "SECURITY",
-          title: "Security Incident - North Gate Checkpoint",
-          location: "North Gate / Security Command",
-          buildingId: "B-08",
-          locationCoords: { lat: 37.7788, lng: -122.4185 },
+          title: "Security Alert - North Checkpoint",
+          location: "N-Block",
+          buildingId: "n-block",
+          locationCoords: { lat: 16.234180, lng: 80.549650 },
           hazardRadius: 50,
           severity: "HIGH",
           confidence: 89,
-          detectedBy: "CAM-06 (North Gate 1)",
-          cameraId: "CAM-06",
+          detectedBy: "CAM-01 (North Gate)",
+          cameraId: "CAM-01",
           peopleAtRisk: 120
         }, { fastDemo, stepDelayMs: options.stepDelayMs || 350 });
 
@@ -61,15 +61,15 @@ export class SimulationService {
       case "SEVERE_WEATHER":
         return await agentOrchestrator.executeEmergencyWorkflow({
           type: "WEATHER",
-          title: "Severe Weather & Water Inundation - Bio Labs",
-          location: "Biotechnology & Research Labs",
-          buildingId: "B-06",
-          locationCoords: { lat: 37.7770, lng: -122.4198 },
+          title: "Severe Weather & Water Inundation - Pharmacy Wing",
+          location: "Pharmacy Block",
+          buildingId: "pharmacy-block",
+          locationCoords: { lat: 16.231420, lng: 80.549250 },
           hazardRadius: 60,
           severity: "HIGH",
           confidence: 88,
-          detectedBy: "CAM-08 (Basement Perimeter)",
-          cameraId: "CAM-08",
+          detectedBy: "CAM-05 (Pharmacy Quad)",
+          cameraId: "CAM-05",
           peopleAtRisk: 190
         }, { fastDemo, stepDelayMs: options.stepDelayMs || 350 });
 
@@ -78,21 +78,21 @@ export class SimulationService {
       case "CROWD_SURGE":
         return await agentOrchestrator.executeEmergencyWorkflow({
           type: "CROWD_EMERGENCY",
-          title: "Crowd Surge Alert - Central Science Library",
-          location: "Central Science Library",
-          buildingId: "B-03",
-          locationCoords: { lat: 37.7765, lng: -122.4162 },
+          title: "Crowd Surge Alert - NTR Library",
+          location: "NTR Library",
+          buildingId: "ntr-library",
+          locationCoords: { lat: 16.233572, lng: 80.548722 },
           hazardRadius: 50,
           severity: "HIGH",
           confidence: 92,
-          detectedBy: "CAM-03 (Library Atrium)",
-          cameraId: "CAM-03",
+          detectedBy: "CAM-04 (NTR Library Circle)",
+          cameraId: "CAM-04",
           peopleAtRisk: 280
         }, { fastDemo, stepDelayMs: options.stepDelayMs || 350 });
 
       case "ROUTE_BLOCKAGE":
       case "BLOCK_ROAD":
-        return agentOrchestrator.handleRoadBlockage("E-07");
+        return agentOrchestrator.handleRoadBlockage("edge-central-h");
 
       case "RESET":
         return agentOrchestrator.resetAll();
